@@ -16,5 +16,5 @@ async fn main() -> tide::Result<()> {
 }
 
 async fn hello(mut _req: Request<()>) -> tide::Result<String> {
-    Ok("hello world".into())
+    Ok("Hello, World!\n".into())
 }
