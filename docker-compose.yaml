@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+  sas:
+    image: localhost/sas:latest
+    container_name: sas
+    ports:
+      - "8000:8080"
+    restart: always
