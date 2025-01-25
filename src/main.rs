@@ -1,13 +1,13 @@
-use tide::{Request};
+use tide::{log::{debug, info}, Request};
 
 #[tokio::main]
 async fn main() -> tide::Result<()> {
     if cfg!(debug_assertions) {
         femme::with_level(femme::LevelFilter::Debug);
-        println!("Debug logging enabled");
+        debug!("Debug logging enabled");
     } else {
         femme::with_level(femme::LevelFilter::Info);
-        println!("Info logging enabled");
+        info!("Info logging enabled");
     }
     let mut app = tide::new();
     app.at("/").get(hello);
