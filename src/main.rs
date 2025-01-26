@@ -1,6 +1,7 @@
 mod handlers;
 mod models;
 mod routes;
+mod services;
 
 use routes::root_routes::init_root_routes;
 
