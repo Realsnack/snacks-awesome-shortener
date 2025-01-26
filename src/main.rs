@@ -1,6 +1,10 @@
-use tide::{log::{debug, info}, Redirect, Request};
-
+mod handlers;
 mod models;
+mod routes;
+
+use routes::root_routes::init_root_routes;
+
+use tide::log::{debug, info};
 
 #[tokio::main]
 async fn main() -> tide::Result<()> {
@@ -12,11 +16,9 @@ async fn main() -> tide::Result<()> {
         info!("Info logging enabled");
     }
     let mut app = tide::new();
-    app.at("/").get(hello);
+
+    init_root_routes(&mut app);
+
     app.listen("0.0.0.0:8080").await?;
     Ok(())
-}
-
-async fn hello(mut _req: Request<()>) -> tide::Result<String> {
-    Ok("{\"Hello\": \"World!\"}\n".into())
 }
