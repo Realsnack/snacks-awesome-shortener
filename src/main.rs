@@ -1,4 +1,6 @@
-use tide::{log::{debug, info}, Request};
+use tide::{log::{debug, info}, Redirect, Request};
+
+mod models;
 
 #[tokio::main]
 async fn main() -> tide::Result<()> {
@@ -16,5 +18,5 @@ async fn main() -> tide::Result<()> {
 }
 
 async fn hello(mut _req: Request<()>) -> tide::Result<String> {
-    Ok("Hello, World!\n".into())
+    Ok("{\"Hello\": \"World!\"}\n".into())
 }
