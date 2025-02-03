@@ -13,5 +13,5 @@ tide = "0.16.0"
 tokio = { version = "1.43.0", features = ["full"] }
 
 [target.x86_64-unknown-linux-musl]
-linker = "/opt/homebrew/bin/x86_64-linux-musl-gcc"
+linker = "x86_64-linux-musl-gcc"
 rustflags = ["-C", "link-arg=-fuse-ld=lld"]
