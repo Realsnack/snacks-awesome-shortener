@@ -1,1 +1,1 @@
-pub mod root_routes;
+pub mod shorts_routes;

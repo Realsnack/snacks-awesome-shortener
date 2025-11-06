@@ -2,14 +2,17 @@ mod handlers;
 mod models;
 mod routes;
 mod services;
+mod state;
 
-use std::ffi::OsString;
-
-use routes::root_routes::init_root_routes;
-
+use std::sync::Arc;
 use tide::log::{debug, info};
+use tide::Server;
+use services::{RedisService, ShortsService};
+use state::AppState;
+use crate::routes::shorts_routes::init_short_routes;
+use async_std;
 
-#[tokio::main]
+#[async_std::main]
 async fn main() -> tide::Result<()> {
     if cfg!(debug_assertions) {
         femme::with_level(femme::LevelFilter::Debug);
@@ -19,27 +22,29 @@ async fn main() -> tide::Result<()> {
         info!("Info logging enabled");
     }
 
-    let app_address = match std::env::var("SAS_IP") {
-        Ok(address) => address,
-        Err(_) => {
-            info!("SAS_IP not specified, using 0.0.0.0");
-            String::from("0.0.0.0")
-        }
-    };
+    let app_address = std::env::var("SAS_IP").unwrap_or_else(|_| {
+        info!("SAS_IP not specified, using 0.0.0.0");
+        String::from("0.0.0.0")
+    });
 
-    let app_port = match std::env::var("SAS_PORT") {
-        Ok(port) => port,
-        Err(_) => {
-            info!("SAS_PORT not specified, using port 8080");
-            String::from("8080")
-        }
-    };
-
-    let mut app = tide::new();
-
-    init_root_routes(&mut app);
-
+    let app_port = std::env::var("SAS_PORT").unwrap_or_else(|_| {
+        info!("SAS_PORT not specified, using port 8080");
+        String::from("8080")
+    });
     let app_listen = format!("{}:{}", app_address, app_port);
+
+    let redis_client = redis::Client::open("redis://127.0.0.1")?;
+    let redis_service = Arc::new(RedisService::new(redis_client));
+    let shorts_service = Arc::new(ShortsService::new(redis_service.clone()));
+
+    let state = AppState {
+        redis_service,
+        shorts_service
+    };
+
+    let mut app = Server::with_state(state);
+
+    init_short_routes(&mut app);
 
     app.listen(app_listen).await?;
     Ok(())

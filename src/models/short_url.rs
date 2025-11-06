@@ -1,8 +1,10 @@
-#[derive(Debug)]
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ShortUrl {
-    short_url: String,
-    long_url: String,
-    expiration: usize,
+    pub short_url: String,
+    pub long_url: String,
+    pub expiration: usize,
 }
 
 impl ShortUrl {
