@@ -1,4 +1,4 @@
-FROM lukemathwalker/cargo-chef:latest-rust-alpine as chef
+FROM lukemathwalker/cargo-chef:latest-rust-alpine AS chef
 WORKDIR /app
 
 FROM chef AS planner
@@ -13,7 +13,7 @@ COPY . .
 RUN cargo build --release
 RUN mv ./target/release/snacks-awesome-shortener ./app
 
-FROM scratch AS runtime
+FROM phusion/baseimage:noble-1.0.2 AS runtime
 LABEL authors="michalsvacina"
 WORKDIR /app
 COPY --from=builder /app/app /usr/local/bin/

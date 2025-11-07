@@ -1,8 +1,26 @@
-version: "3.9"
 services:
   sas:
-    image: localhost/sas:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: sas
     ports:
-      - "8000:8080"
+      - "8080:8080"
     restart: always
+    environment:
+      - REDIS_URL=redis://valkey:6379
+    networks:
+      - shortener
+
+  valkey:
+    image: valkey/valkey:latest
+    container_name: valkey
+    ports:
+      - "6379:6379"
+    restart: always
+    networks:
+      - shortener
+
+networks:
+  shortener:
+    driver: bridge
