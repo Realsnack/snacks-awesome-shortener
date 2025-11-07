@@ -21,6 +21,6 @@ jobs:
         uses: google-github-actions/release-please-action@v3
         with:
           release-type: rust
-          package-name: kptool
+          package-name: snacks-awesome-shortener
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
