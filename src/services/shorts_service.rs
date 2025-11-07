@@ -5,7 +5,6 @@ use rand::rngs::ThreadRng;
 use tide::log::debug;
 use crate::models::short_url::ShortUrl;
 use crate::services::RedisService;
-use serde_json::json;
 
 pub struct ShortsService {
     redis_service: Arc<RedisService>,
@@ -17,7 +16,6 @@ impl ShortsService {
     }
 
     pub async fn generate_short_url(&self, long_url: String) -> ShortUrl {
-        const CHARS: &str = "abcdefghjklmnopqrtuvwxyzABCDEFGHJKLMNOPQRTUVWXYZ1234567890";
         let short_url = {
             let mut rng = rng();
             Self::generate_short(&mut rng)

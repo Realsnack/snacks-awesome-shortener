@@ -1,11 +1,12 @@
 use tide::{Response, StatusCode};
 use crate::state::AppState;
 use serde_json::json;
+use tide::log::info;
 use crate::models::short_url::ShortUrl;
 
-pub async fn handle_short_redirect(mut req: tide::Request<AppState>) -> tide::Result {
+pub async fn handle_short_redirect(req: tide::Request<AppState>) -> tide::Result {
     let short_url = req.param("short")?.to_string();
-
+    info!("Searching for short_url: '{}'", short_url);
     let service = &req.state().shorts_service;
     let long_url_string = service.get_long_url(short_url).await;
 
@@ -16,7 +17,7 @@ pub async fn handle_short_redirect(mut req: tide::Request<AppState>) -> tide::Re
     Ok(res)
 }
 
-pub async fn handle_short_get(mut req: tide::Request<AppState>) -> tide::Result {
+pub async fn handle_short_get(req: tide::Request<AppState>) -> tide::Result {
     let short_url = req.param("short")?.to_string();
 
     let service = &req.state().shorts_service;

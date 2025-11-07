@@ -10,7 +10,6 @@ use tide::Server;
 use services::{RedisService, ShortsService};
 use state::AppState;
 use crate::routes::shorts_routes::init_short_routes;
-use async_std;
 
 #[async_std::main]
 async fn main() -> tide::Result<()> {
@@ -38,8 +37,7 @@ async fn main() -> tide::Result<()> {
     let shorts_service = Arc::new(ShortsService::new(redis_service.clone()));
 
     let state = AppState {
-        redis_service,
-        shorts_service
+        shorts_service,
     };
 
     let mut app = Server::with_state(state);
