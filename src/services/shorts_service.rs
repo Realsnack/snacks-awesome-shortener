@@ -25,6 +25,7 @@ impl ShortsService {
 
         let short_url_object = ShortUrl::new(short_url.clone(), long_url, 86400);
 
+        // TODO: Fix this abomination
         self.redis_service.set(short_url.clone().as_str(), serde_json::to_string(&short_url_object).unwrap_or_default().as_str()).await.unwrap_or_default();
 
         short_url_object
@@ -38,9 +39,8 @@ impl ShortsService {
 
         short_url
     }
-    pub async fn get_long_url(&self, short_url: String) -> String {
-        let short_url_string = self.redis_service.get(short_url.as_str()).await.unwrap_or_default().unwrap_or_default();
 
-        short_url_string
+    pub async fn get_long_url(&self, short_url: String) -> Option<String> {
+        self.redis_service.get(short_url.as_str()).await
     }
 }

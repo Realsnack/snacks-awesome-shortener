@@ -8,24 +8,40 @@ pub async fn handle_short_redirect(req: tide::Request<AppState>) -> tide::Result
     let short_url = req.param("short")?.to_string();
     info!("Searching for short_url: '{}'", short_url);
     let service = &req.state().shorts_service;
-    let long_url_string = service.get_long_url(short_url).await;
 
-    let short_url_object: ShortUrl = serde_json::from_str(&long_url_string)?;
+    let response = match service.get_long_url(short_url).await {
+        Some(long_url) => {
+            let short_url_object: ShortUrl = serde_json::from_str(&long_url)?;
+            let mut res = tide::Response::new(StatusCode::Found);
+            res.insert_header("Location", short_url_object.long_url);
+            res
+        },
+        None => {
+            info!("short_url not found in redis");
+            Response::new(StatusCode::NotFound)
+        }
+    };
 
-    let mut res = tide::Response::new(302);
-    res.insert_header("Location", short_url_object.long_url);
-    Ok(res)
+    Ok(response)
 }
 
 pub async fn handle_short_get(req: tide::Request<AppState>) -> tide::Result {
     let short_url = req.param("short")?.to_string();
 
     let service = &req.state().shorts_service;
-    let long_url = service.get_long_url(short_url).await;
+    let response = match service.get_long_url(short_url).await {
+        Some(short_url) => {
+            Response::builder(StatusCode::Ok)
+                .body(short_url)
+                .build()
+        },
+        None => {
+            info!("short_url not found in redis");
+            Response::new(StatusCode::NotFound)
+        }
+    };
 
-    Ok(Response::builder(StatusCode::Ok)
-        .body(long_url)
-        .build())
+    Ok(response)
 }
 
 pub async fn handle_short_post(mut req: tide::Request<AppState>) -> tide::Result {
