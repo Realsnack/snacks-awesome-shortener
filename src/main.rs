@@ -33,8 +33,8 @@ async fn main() -> tide::Result<()> {
     let app_listen = format!("{}:{}", app_address, app_port);
 
     let redis_url = std::env::var("REDIS_URL").unwrap_or_else(|_| {
-        info!("REDIS_URL not specified, using 127.0.0.1:6379");
-        String::from("redis::/127.0.0.1:6379")
+        info!("REDIS_URL not specified, using 'redis://127.0.0.1:6379'");
+        String::from("redis://127.0.0.1:6379")
     });
 
     let redis_client = redis::Client::open(redis_url)?;
