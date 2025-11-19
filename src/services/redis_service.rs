@@ -1,5 +1,6 @@
 use anyhow::Result;
 use redis::{AsyncCommands, Client};
+use redis::aio::MultiplexedConnection;
 use tide::log::error;
 
 #[derive(Clone)]
@@ -12,36 +13,54 @@ impl RedisService {
         Self { client }
     }
 
+    async fn get_connection(&self) -> Option<MultiplexedConnection> {
+        self.client
+            .get_multiplexed_async_connection()
+            .await
+            .map_err(|e| {
+                error!("Error while getting redis connection: {}", e);
+            })
+            .ok()
+    }
+
     pub async fn get(&self, key: &str) -> Option<String> {
-        match self.client.get_multiplexed_async_connection().await {
-            Err(reason) => {
-                error!("Error while getting redis connection: {}", reason);
-                None
-            },
-            Ok(mut conn) => {
-                match conn.get(key).await {
-                    Ok(value) => Some(value),
-                    Err(_) => None
-                }
-            },
-        }
+        let mut conn = self.get_connection().await?;
+
+        conn.get(key)
+        .await
+        .map_err(|e| {
+            error!("Error while getting key '{}' from redis: {}", key, e);
+        })
+        .ok()
     }
 
     pub async fn set(&self, key: &str, value: &str) -> Result<()> {
-        match self.client.get_multiplexed_async_connection().await {
-            Err(reason) => {
-                error!("Error while getting redis connection: {}", reason);
-                Ok(())
-            },
-            Ok(mut conn) => {
-                match conn.set::<_,_,()>(key, value).await {
-                    Ok(_) => Ok(()),
-                    Err(reason) => {
-                        error!("Error while setting redis key: {}", reason);
-                        Ok(())
-                    }
-                }
-            }
+        let mut conn = match self.get_connection().await {
+            None => return Err(anyhow::anyhow!("No redis connection")),
+            Some(c) => c
+        };
+
+        if let Err(e) =conn.set::<_,_,()>(key,value).await {
+            error!("Failet to set key '{}': {}", key, e);
+            return Err(e.into());
         }
+
+        Ok(())
+
+        // match self.client.get_multiplexed_async_connection().await {
+        //     Err(reason) => {
+        //         error!("Error while getting redis connection: {}", reason);
+        //         Ok(())
+        //     },
+        //     Ok(mut conn) => {
+        //         match conn.set::<_,_,()>(key, value).await {
+        //             Ok(_) => Ok(()),
+        //             Err(reason) => {
+        //                 error!("Error while setting redis key: {}", reason);
+        //                 Ok(())
+        //             }
+        //         }
+        //     }
+        // }
     }
 }
