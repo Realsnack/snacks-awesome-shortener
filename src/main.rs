@@ -15,11 +15,11 @@ use crate::routes::shorts_routes::init_short_routes;
 async fn main() -> tide::Result<()> {
     if cfg!(debug_assertions) {
         femme::with_level(femme::LevelFilter::Debug);
-        debug!("Debug logging enabled");
+        debug!("Debug logging enabled!");
     } else {
         femme::with_level(femme::LevelFilter::Info);
-        info!("Info logging enabled");
     }
+    info!("Starting {} v{}", std::env::var("CARGO_PKG_NAME")?, std::env::var("CARGO_PKG_VERSION")?);
 
     let app_address = std::env::var("SAS_IP").unwrap_or_else(|_| {
         info!("SAS_IP not specified, using 0.0.0.0");
