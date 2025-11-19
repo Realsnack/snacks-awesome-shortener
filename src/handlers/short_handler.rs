@@ -47,12 +47,22 @@ pub async fn handle_short_get(req: tide::Request<AppState>) -> tide::Result {
 pub async fn handle_short_post(mut req: tide::Request<AppState>) -> tide::Result {
     let body: serde_json::Value = req.body_json().await?;
     debug!("Short post body: '{}'", body);
-    let long_url = body["url"].as_str().unwrap();
+    let long_url = match body["url"].as_str() {
+        None => {
+            info!("No 'url' in request body: {}", body);
+            return Ok(Response::builder(StatusCode::BadRequest).build()) },
+        Some(url) => url
+    };
 
     let service = &req.state().shorts_service;
-    let short_url = service.generate_short_url(long_url.into()).await;
-
-    Ok(Response::builder(StatusCode::Ok)
-        .body(json!(short_url))
-        .build())
+    match service.generate_short_url(long_url.into()).await {
+        None => {
+            Ok(Response::builder(StatusCode::InternalServerError)
+                .build())
+        },
+        Some(short_url) =>
+            Ok(Response::builder(StatusCode::Ok)
+                .body(json!(short_url))
+                .build())
+    }
 }

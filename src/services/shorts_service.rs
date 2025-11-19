@@ -2,7 +2,7 @@ use std::sync::Arc;
 use rand::seq::IteratorRandom;
 use rand::rng;
 use rand::rngs::ThreadRng;
-use tide::log::debug;
+use tide::log::{debug, error};
 use crate::models::short_url::ShortUrl;
 use crate::services::RedisService;
 
@@ -15,7 +15,7 @@ impl ShortsService {
         Self { redis_service }
     }
 
-    pub async fn generate_short_url(&self, long_url: String) -> ShortUrl {
+    pub async fn generate_short_url(&self, long_url: String) -> Option<ShortUrl> {
         let short_url = {
             let mut rng = rng();
             Self::generate_short(&mut rng)
@@ -25,10 +25,20 @@ impl ShortsService {
 
         let short_url_object = ShortUrl::new(short_url.clone(), long_url, 86400);
 
-        // TODO: Fix this abomination
-        self.redis_service.set(short_url.clone().as_str(), serde_json::to_string(&short_url_object).unwrap_or_default().as_str()).await.unwrap_or_default();
+        let payload = match serde_json::to_string(&short_url_object) {
+            Ok(val) => val,
+            Err(e) => {
+                error!("Failed to serialize ShortUrl: {}", e);
+                return None;
+            }
+        };
 
-        short_url_object
+        if let Err(e) = self.redis_service.set(&short_url, &payload).await {
+            error!("Failed to save short url {}: {}", short_url, e);
+            return None;
+        }
+
+        Some(short_url_object)
     }
 
     fn generate_short(mut rng: &mut ThreadRng) -> String {
