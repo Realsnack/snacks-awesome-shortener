@@ -3,11 +3,19 @@ use rand::seq::IteratorRandom;
 use rand::rng;
 use rand::rngs::ThreadRng;
 use tide::log::{debug, error};
+use tide::utils::async_trait;
 use crate::models::short_url::ShortUrl;
+use crate::services::redis_service::RedisStore;
 use crate::services::RedisService;
 
+#[async_trait]
+pub trait Shortener: Send + Sync {
+    async fn generate_short_url(&self, long_url: String) -> Option<ShortUrl>;
+    async fn get_long_url(&self, short_url: String) -> Option<String>;
+}
+
 pub struct ShortsService {
-    redis_service: Arc<RedisService>,
+    redis_service: Arc<dyn RedisStore>,
 }
 
 impl ShortsService {
@@ -15,7 +23,19 @@ impl ShortsService {
         Self { redis_service }
     }
 
-    pub async fn generate_short_url(&self, long_url: String) -> Option<ShortUrl> {
+    fn generate_short(mut rng: &mut ThreadRng) -> String {
+        const CHARS: &str = "abcdefghjklmnopqrtuvwxyzABCDEFGHJKLMNOPQRTUVWXYZ1234567890";
+        let short_url: String = (0..6)
+            .map(|_| CHARS.chars().choose(&mut rng).unwrap())
+            .collect();
+
+        short_url
+    }
+}
+
+#[async_trait]
+impl Shortener for ShortsService {
+    async fn generate_short_url(&self, long_url: String) -> Option<ShortUrl> {
         let short_url = {
             let mut rng = rng();
             Self::generate_short(&mut rng)
@@ -41,16 +61,7 @@ impl ShortsService {
         Some(short_url_object)
     }
 
-    fn generate_short(mut rng: &mut ThreadRng) -> String {
-        const CHARS: &str = "abcdefghjklmnopqrtuvwxyzABCDEFGHJKLMNOPQRTUVWXYZ1234567890";
-        let short_url: String = (0..6)
-            .map(|_| CHARS.chars().choose(&mut rng).unwrap())
-            .collect();
-
-        short_url
-    }
-
-    pub async fn get_long_url(&self, short_url: String) -> Option<String> {
+    async fn get_long_url(&self, short_url: String) -> Option<String> {
         self.redis_service.get(short_url.as_str()).await
     }
 }

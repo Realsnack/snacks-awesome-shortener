@@ -2,6 +2,13 @@ use anyhow::Result;
 use redis::{AsyncCommands, Client};
 use redis::aio::MultiplexedConnection;
 use tide::log::error;
+use tide::utils::async_trait;
+
+#[async_trait]
+pub trait RedisStore: Send + Sync {
+    async fn get(&self, key: &str) -> Option<String>;
+    async fn set(&self, key: &str, value: &str) -> Result<()>;
+}
 
 #[derive(Clone)]
 pub struct RedisService {
@@ -22,8 +29,11 @@ impl RedisService {
             })
             .ok()
     }
+}
 
-    pub async fn get(&self, key: &str) -> Option<String> {
+#[async_trait]
+impl RedisStore for RedisService {
+    async fn get(&self, key: &str) -> Option<String> {
         let mut conn = self.get_connection().await?;
 
         conn.get(key)
@@ -34,7 +44,7 @@ impl RedisService {
         .ok()
     }
 
-    pub async fn set(&self, key: &str, value: &str) -> Result<()> {
+    async fn set(&self, key: &str, value: &str) -> Result<()> {
         let mut conn = match self.get_connection().await {
             None => return Err(anyhow::anyhow!("No redis connection")),
             Some(c) => c
