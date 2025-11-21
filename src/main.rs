@@ -9,7 +9,7 @@ use tide::log::{debug, info};
 use tide::Server;
 use services::{RedisService, ShortsService};
 use state::AppState;
-use crate::routes::shorts_routes::init_short_routes;
+use routes::shorts_routes::init_short_routes;
 
 #[async_std::main]
 async fn main() -> tide::Result<()> {
