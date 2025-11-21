@@ -64,8 +64,7 @@ mod tests {
     use super::*;
 
     #[async_std::test]
-    async fn successful_redis_get()
-    {
+    async fn successful_redis_get() {
         // Arrange
         let redis_mock = MockRedis::new();
         let set_value = "set_value";
@@ -76,5 +75,18 @@ mod tests {
 
         // Assert
         assert_eq!(set_value, redis_result);
+    }
+
+    #[async_std::test]
+    async fn successful_redis_set() {
+        // Arrange
+        let redis_mock = MockRedis::new();
+        let set_value = "set_value";
+
+        // Act
+        let redis_result = redis_mock.set("test_key", set_value).await.ok();
+
+        // Assert
+        assert_ne!(Option::None, redis_result);
     }
 }
