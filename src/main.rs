@@ -30,7 +30,14 @@ async fn main() -> tide::Result<()> {
         String::from("8080")
     });
 
-    info!("Starting {} v{} on address: {}:{}", std::env::var("CARGO_PKG_NAME")?, std::env::var("CARGO_PKG_VERSION")?, app_address, app_port);
+    if let Err(e) = std::env::var("CARGO_PKG_NAME") {
+        debug!("Cannot get CARGO_PKG_NAME: {}", e);
+        info!("Starting on address: {}:{}", app_address, app_port);
+    }
+    else {
+        info!("Starting {} v{} on address: {}:{}", std::env::var("CARGO_PKG_NAME")?, std::env::var("CARGO_PKG_VERSION")?, app_address, app_port);
+    }
+
     let app_listen = format!("{}:{}", app_address, app_port);
 
     let redis_url = std::env::var("REDIS_URL").unwrap_or_else(|_| {
