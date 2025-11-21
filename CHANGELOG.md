@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.0](https://github.com/Realsnack/snacks-awesome-shortener/compare/v0.1.0...v0.2.0) (2025-11-21)
+
+
+### Features
+
+* Add version info to startup log ([4f5540e](https://github.com/Realsnack/snacks-awesome-shortener/commit/4f5540efc7734c2001388068030a6aac252562b9))
+* Created traits for services ([2099748](https://github.com/Realsnack/snacks-awesome-shortener/commit/2099748b78ecbe2d39d0ca70363aaffdb367dada))
+* Minor startup logging change ([6ff96a1](https://github.com/Realsnack/snacks-awesome-shortener/commit/6ff96a15014e18d3810328bcb84a387510c78d2a))
+
 ## 0.1.0 (2025-11-19)
 
 
