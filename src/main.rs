@@ -19,17 +19,18 @@ async fn main() -> tide::Result<()> {
     } else {
         femme::with_level(femme::LevelFilter::Info);
     }
-    info!("Starting {} v{}", std::env::var("CARGO_PKG_NAME")?, std::env::var("CARGO_PKG_VERSION")?);
 
     let app_address = std::env::var("SAS_IP").unwrap_or_else(|_| {
-        info!("SAS_IP not specified, using 0.0.0.0");
+        debug!("SAS_IP not specified, using 0.0.0.0");
         String::from("0.0.0.0")
     });
 
     let app_port = std::env::var("SAS_PORT").unwrap_or_else(|_| {
-        info!("SAS_PORT not specified, using port 8080");
+        debug!("SAS_PORT not specified, using port 8080");
         String::from("8080")
     });
+
+    info!("Starting {} v{} on address: {}:{}", std::env::var("CARGO_PKG_NAME")?, std::env::var("CARGO_PKG_VERSION")?, app_address, app_port);
     let app_listen = format!("{}:{}", app_address, app_port);
 
     let redis_url = std::env::var("REDIS_URL").unwrap_or_else(|_| {
