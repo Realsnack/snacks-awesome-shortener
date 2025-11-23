@@ -1,3 +1,5 @@
 #!/bin/bash
 
-docker build -t sas ./
+VERSION=$(cat version.txt)
+
+docker build -t sas:"$VERSION" -t sas:latest ./
