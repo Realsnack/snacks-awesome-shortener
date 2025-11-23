@@ -85,7 +85,7 @@ async fn main() {
         )
         .with_state(state);
 
-    match tokio::net::TcpListener::bind("0.0.0.0:8080").await {
+    match tokio::net::TcpListener::bind(format!("{}:{}", app_address, app_port)).await {
         Ok(listener) => {
             axum::serve(listener, tower::make::Shared::new(app)).await.unwrap();
         }
