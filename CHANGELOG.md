@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.0](https://github.com/Realsnack/snacks-awesome-shortener/compare/v0.1.0...v1.0.0) (2025-11-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* Axum rewrite ([#4](https://github.com/Realsnack/snacks-awesome-shortener/issues/4))
+
+### Features
+
+* Add version info to startup log ([4f5540e](https://github.com/Realsnack/snacks-awesome-shortener/commit/4f5540efc7734c2001388068030a6aac252562b9))
+* Axum rewrite ([#4](https://github.com/Realsnack/snacks-awesome-shortener/issues/4)) ([2e30bfa](https://github.com/Realsnack/snacks-awesome-shortener/commit/2e30bfa8210067cbedfdf10e10bc2ea2b14eb690))
+* Created traits for services ([2099748](https://github.com/Realsnack/snacks-awesome-shortener/commit/2099748b78ecbe2d39d0ca70363aaffdb367dada))
+* Minor startup logging change ([6ff96a1](https://github.com/Realsnack/snacks-awesome-shortener/commit/6ff96a15014e18d3810328bcb84a387510c78d2a))
+* store shorts in mongodb ([a3fb025](https://github.com/Realsnack/snacks-awesome-shortener/commit/a3fb0254f3888f094e5e9e6c528073a5c2426d42))
+
+
+### Bug Fixes
+
+* clippy warnings ([ce86f90](https://github.com/Realsnack/snacks-awesome-shortener/commit/ce86f905a19052e5b1a59a28befc9ba48c8abd07))
+* incorrect logging on nil key in redis ([66f4590](https://github.com/Realsnack/snacks-awesome-shortener/commit/66f4590ef33e3bfc7374779ca0438a279ece8422))
+
 ## 0.1.0 (2025-11-19)
 
 
