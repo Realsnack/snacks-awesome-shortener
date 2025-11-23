@@ -1,8 +1,9 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use redis::{AsyncCommands, Client};
 use redis::aio::MultiplexedConnection;
-use tracing::error;
+use redis::{AsyncCommands, Client, ErrorKind};
+
+use tracing::{error, info, warn};
 
 #[async_trait]
 pub trait RedisStore: Send + Sync {
@@ -10,9 +11,8 @@ pub trait RedisStore: Send + Sync {
     async fn set(&self, key: &str, value: &str) -> Result<()>;
 }
 
-#[derive(Clone)]
 pub struct RedisService {
-    client: Client
+    client: Client,
 }
 
 impl RedisService {
@@ -37,20 +37,27 @@ impl RedisStore for RedisService {
         let mut conn = self.get_connection().await?;
 
         conn.get(key)
-        .await
-        .map_err(|e| {
-            error!("Error while getting key '{}' from redis: {}", key, e);
-        })
-        .ok()
+            .await
+            .map_err(|e| {
+                match e.kind() {
+                    ErrorKind::TypeError => {
+                        info!("Key '{}' was not found", key)
+                    }
+                    _ => {
+                        warn!("Error while getting key '{}' from redis: {}", key, e);
+                    }
+                };
+            })
+            .ok()
     }
 
     async fn set(&self, key: &str, value: &str) -> Result<()> {
         let mut conn = match self.get_connection().await {
             None => return Err(anyhow::anyhow!("No redis connection")),
-            Some(c) => c
+            Some(c) => c,
         };
 
-        if let Err(e) =conn.set_ex::<_,_,()>(key,value, 86400).await {
+        if let Err(e) = conn.set_ex::<_, _, ()>(key, value, 86400).await {
             error!("Failed to set key '{}': {}", key, e);
             return Err(e.into());
         }
