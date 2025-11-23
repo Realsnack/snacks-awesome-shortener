@@ -6,9 +6,9 @@ mod state;
 
 use std::sync::Arc;
 use axum::Router;
-use crate::services::{RedisService, ShortsService};
-// use mongodb::Client;
-// use mongodb::options::{ClientOptions, ServerApi, ServerApiVersion};
+use services::{MongoService, RedisService, ShortsService};
+use mongodb::Client;
+use mongodb::options::{ClientOptions, ServerApi, ServerApiVersion};
 use routes::{root_routes, shorts_routes};
 use state::AppState;
 use tower::ServiceBuilder;
@@ -52,25 +52,25 @@ async fn main() {
         String::from("redis://127.0.0.1:6379")
     });
 
-    // let mongo_url = std::env::var("MONGO_URL").unwrap_or_else(|_| {
-    //     info!("MONGO_URL not specified, using 'mongodb://127.0.0.1:27017'");
-    //     String::from("mongodb://127.0.0.1:27017")
-    // });
-    // let mut client_options = match ClientOptions::parse((mongo_url)).await {
-    //     Ok(opts) => opts,
-    //     Err(e) => {
-    //         error!("Received error while construction ClientOptions: '{}'", e);
-    //         panic!()
-    //     }
-    // };
-    // let server_api = ServerApi::builder().version(ServerApiVersion::V1).build();
-    // client_options.server_api = Some(server_api);
+    let mongo_url = std::env::var("MONGO_URL").unwrap_or_else(|_| {
+        info!("MONGO_URL not specified, using 'mongodb://127.0.0.1:27017'");
+        String::from("mongodb://127.0.0.1:27017")
+    });
+    let mut client_options = match ClientOptions::parse(mongo_url).await {
+        Ok(opts) => opts,
+        Err(e) => {
+            error!("Received error while construction ClientOptions: '{}'", e);
+            panic!()
+        }
+    };
+    let server_api = ServerApi::builder().version(ServerApiVersion::V1).build();
+    client_options.server_api = Some(server_api);
 
     let redis_client = redis::Client::open(redis_url).unwrap();
     let redis_service = Arc::new(RedisService::new(redis_client));
-    let shorts_service = Arc::new(ShortsService::new(redis_service.clone()));
-    // let mongo_client = Client::with_options(client_options)?;
-    // let mongo_service = Arc::new(MongoService::new(mongo_client));
+    let mongo_client = Client::with_options(client_options).unwrap();
+    let mongo_service = Arc::new(MongoService::new(mongo_client));
+    let shorts_service = Arc::new(ShortsService::new(redis_service, mongo_service));
 
     let state = AppState {
         shorts_service,
@@ -85,6 +85,12 @@ async fn main() {
         )
         .with_state(state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
-    axum::serve(listener, tower::make::Shared::new(app)).await.unwrap();
+    match tokio::net::TcpListener::bind("0.0.0.0:8080").await {
+        Ok(listener) => {
+            axum::serve(listener, tower::make::Shared::new(app)).await.unwrap();
+        }
+        Err(e) => {
+            error!("Couldn't start app due to error: '{}'", e);
+        }
+    };
 }

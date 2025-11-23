@@ -11,6 +11,7 @@ services:
       SAS_IP: 0.0.0.0
       SAS_PORT: 8080
       REDIS_URL: redis://valkey:6379
+      MONGO_URL: mongodb://shorts_app:shorts_pwd@mongodb:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authSource=shorts
     networks:
       - shortener
 
@@ -44,7 +45,7 @@ services:
       - "7080:8080"
     restart: always
     environment:
-      CW_MONGO_URI: mongodb://mongodb:27017
+      CW_MONGO_URI: mongodb://mongoadmin:mongopwd@mongodb:27017
     networks:
       - shortener
 
