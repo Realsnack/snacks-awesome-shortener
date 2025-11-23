@@ -26,7 +26,7 @@ impl MongoRepository for MongoService {
     async fn find_short(&self, key: &str) -> Option<MongoShortUrl> {
         let collection: Collection<MongoShortUrl> =
             self.client.database("shorts").collection("short_url");
-        collection.find_one(doc! { "_id": key}).await.unwrap_or_else(|_| None)
+        collection.find_one(doc! { "_id": key}).await.unwrap_or(None)
     }
 
     async fn save_short(&self, short: MongoShortUrl) -> Result<()> {

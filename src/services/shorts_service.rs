@@ -17,7 +17,7 @@ pub trait Shortener: Send + Sync {
     async fn generate_short_url(&self, long_url: String) -> Option<ShortUrl>;
     async fn get_long_url(&self, short_url: String) -> Option<String>;
     async fn save_short_to_mongo(&self, short: ShortUrl) -> Result<()>;
-    async fn get_short_from_mongo(&self, short_url: &String) -> Option<ShortUrl>;
+    async fn get_short_from_mongo(&self, short_url: &str) -> Option<ShortUrl>;
 }
 
 pub struct ShortsService {
@@ -96,12 +96,7 @@ impl Shortener for ShortsService {
         Ok(self.mongo_service.save_short(mongo_short).await?)
     }
 
-    async fn get_short_from_mongo(&self, short_url: &String) -> Option<ShortUrl> {
-        match self.mongo_service.find_short(short_url.as_str()).await {
-            None => None,
-            Some(mongo_short) => {
-                Some(ShortUrl::from_mongo_short(mongo_short))
-            }
-        }
+    async fn get_short_from_mongo(&self, short_url: &str) -> Option<ShortUrl> {
+        self.mongo_service.find_short(short_url).await.map(ShortUrl::from_mongo_short)
     }
 }
