@@ -5,19 +5,28 @@ mod services;
 mod state;
 
 use std::sync::Arc;
-use tide::log::{debug, info};
-use tide::Server;
-use services::{RedisService, ShortsService};
+use axum::Router;
+use crate::services::{RedisService, ShortsService};
+// use mongodb::Client;
+// use mongodb::options::{ClientOptions, ServerApi, ServerApiVersion};
+use routes::{root_routes, shorts_routes};
 use state::AppState;
-use routes::shorts_routes::init_short_routes;
+use tower::ServiceBuilder;
+use tower_http::trace::TraceLayer;
+use tracing::{debug, error, info};
 
-#[async_std::main]
-async fn main() -> tide::Result<()> {
+#[tokio::main]
+async fn main() {
     if cfg!(debug_assertions) {
-        femme::with_level(femme::LevelFilter::Debug);
-        debug!("Debug logging enabled!");
+        tracing_subscriber::fmt()
+            .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+            // .json()
+            .init();
     } else {
-        femme::with_level(femme::LevelFilter::Info);
+        tracing_subscriber::fmt()
+            .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+            .json()
+            .init();
     }
 
     let app_address = std::env::var("SAS_IP").unwrap_or_else(|_| {
@@ -30,26 +39,52 @@ async fn main() -> tide::Result<()> {
         String::from("8080")
     });
 
-    info!("Starting {} v{} on address: {}:{}", std::env::var("CARGO_PKG_NAME")?, std::env::var("CARGO_PKG_VERSION")?, app_address, app_port);
-    let app_listen = format!("{}:{}", app_address, app_port);
+    info!(
+        "Starting {} v{} on address: {}:{}",
+        std::env::var("CARGO_PKG_NAME").unwrap_or("snacks-awesome-shortener".to_string()),
+        std::env::var("CARGO_PKG_VERSION").unwrap_or("X.X".to_string()),
+        app_address,
+        app_port
+    );
 
     let redis_url = std::env::var("REDIS_URL").unwrap_or_else(|_| {
         info!("REDIS_URL not specified, using 'redis://127.0.0.1:6379'");
         String::from("redis://127.0.0.1:6379")
     });
 
-    let redis_client = redis::Client::open(redis_url)?;
+    // let mongo_url = std::env::var("MONGO_URL").unwrap_or_else(|_| {
+    //     info!("MONGO_URL not specified, using 'mongodb://127.0.0.1:27017'");
+    //     String::from("mongodb://127.0.0.1:27017")
+    // });
+    // let mut client_options = match ClientOptions::parse((mongo_url)).await {
+    //     Ok(opts) => opts,
+    //     Err(e) => {
+    //         error!("Received error while construction ClientOptions: '{}'", e);
+    //         panic!()
+    //     }
+    // };
+    // let server_api = ServerApi::builder().version(ServerApiVersion::V1).build();
+    // client_options.server_api = Some(server_api);
+
+    let redis_client = redis::Client::open(redis_url).unwrap();
     let redis_service = Arc::new(RedisService::new(redis_client));
     let shorts_service = Arc::new(ShortsService::new(redis_service.clone()));
+    // let mongo_client = Client::with_options(client_options)?;
+    // let mongo_service = Arc::new(MongoService::new(mongo_client));
 
     let state = AppState {
         shorts_service,
     };
 
-    let mut app = Server::with_state(state);
+    let app = Router::new()
+        .merge(root_routes::root_routes())
+        .merge(shorts_routes::shorts_routes())
+        .layer(
+            ServiceBuilder::new()
+                .layer(TraceLayer::new_for_http())
+        )
+        .with_state(state);
 
-    init_short_routes(&mut app);
-
-    app.listen(app_listen).await?;
-    Ok(())
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+    axum::serve(listener, tower::make::Shared::new(app)).await.unwrap();
 }

@@ -1,9 +1,9 @@
 use std::sync::Arc;
+use async_trait::async_trait;
 use rand::seq::IteratorRandom;
 use rand::rng;
 use rand::rngs::ThreadRng;
-use tide::log::{debug, error};
-use tide::utils::async_trait;
+use tracing::{debug, error};
 use crate::models::short_url::ShortUrl;
 use crate::services::redis_service::RedisStore;
 use crate::services::RedisService;

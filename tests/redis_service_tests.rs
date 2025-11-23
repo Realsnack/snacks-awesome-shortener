@@ -2,7 +2,7 @@ use snacks_awesome_shortener::services::redis_service::RedisStore;
 use std::collections::HashMap;
 use std::sync::Arc;
 use async_std::sync::Mutex;
-use tide::utils::async_trait;
+use async_trait::async_trait;
 
 pub struct MockRedis{
     map: Arc<Mutex<HashMap<String,String>>>,
