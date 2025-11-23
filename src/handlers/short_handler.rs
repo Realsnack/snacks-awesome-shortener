@@ -1,68 +1,70 @@
-use tide::{Response, StatusCode};
-use crate::state::AppState;
-use serde_json::json;
-use tide::log::{debug, info};
 use crate::models::short_url::ShortUrl;
+use crate::state::AppState;
+use axum::Json;
+use axum::body::Body;
+use axum::extract::{Path, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Redirect, Response};
+use serde_json::json;
+use tracing::{debug, info};
 
-pub async fn handle_short_redirect(req: tide::Request<AppState>) -> tide::Result {
-    let short_url = req.param("short")?.to_string();
+pub async fn handle_short_redirect(
+    State(state): State<AppState>,
+    Path(short_url): Path<String>,
+) -> Response {
     info!("Searching for short_url: '{}'", short_url);
-    let service = &req.state().shorts_service;
+    let service = state.shorts_service;
 
-    let response = match service.get_long_url(short_url).await {
+    match service.get_long_url(short_url).await {
         Some(long_url) => {
-            let short_url_object: ShortUrl = serde_json::from_str(&long_url)?;
-            let mut res = tide::Response::new(StatusCode::Found);
-            res.insert_header("Location", short_url_object.long_url);
-            res
-        },
-        None => {
-            info!("short_url not found in redis");
-            Response::new(StatusCode::NotFound)
+            let short_url_object: ShortUrl = serde_json::from_str(&long_url).unwrap();
+            Redirect::temporary(short_url_object.long_url.as_str()).into_response()
         }
-    };
-
-    Ok(response)
+        None => (StatusCode::NOT_FOUND).into_response(),
+    }
 }
 
-pub async fn handle_short_get(req: tide::Request<AppState>) -> tide::Result {
-    let short_url = req.param("short")?.to_string();
-    info!("Searching for short_url: '{}'", short_url);
-    let service = &req.state().shorts_service;
-    let response = match service.get_long_url(short_url).await {
-        Some(short_url) => {
-            Response::builder(StatusCode::Ok)
-                .body(short_url)
-                .build()
-        },
+pub async fn handle_short_get(
+    State(state): State<AppState>,
+    Path(short_url): Path<String>,
+) -> Response {
+    debug!("Searching for short_url: '{}'", short_url);
+    let service = state.shorts_service;
+
+    match service.get_long_url(short_url).await {
+        Some(short_url) => Response::builder()
+            .status(StatusCode::OK)
+            .body(Body::from(short_url))
+            .unwrap(),
         None => {
             info!("short_url not found in redis");
-            Response::new(StatusCode::NotFound)
+            StatusCode::NOT_FOUND.into_response()
         }
-    };
-
-    Ok(response)
+    }
 }
 
-pub async fn handle_short_post(mut req: tide::Request<AppState>) -> tide::Result {
-    let body: serde_json::Value = req.body_json().await?;
+pub async fn handle_short_post(
+    State(state): State<AppState>,
+    Json(body): Json<serde_json::Value>,
+) -> Response {
     debug!("Short post body: '{}'", body);
     let long_url = match body["url"].as_str() {
         None => {
             info!("No 'url' in request body: {}", body);
-            return Ok(Response::builder(StatusCode::BadRequest).build()) },
-        Some(url) => url
+            return Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .body(Body::from("{\"reason\": \"No 'url' in request body\"}"))
+                .unwrap();
+        }
+        Some(url) => url,
     };
 
-    let service = &req.state().shorts_service;
+    let service = state.shorts_service;
     match service.generate_short_url(long_url.into()).await {
-        None => {
-            Ok(Response::builder(StatusCode::InternalServerError)
-                .build())
-        },
-        Some(short_url) =>
-            Ok(Response::builder(StatusCode::Ok)
-                .body(json!(short_url))
-                .build())
+        None => StatusCode::NOT_FOUND.into_response(),
+        Some(short_url) => Response::builder()
+            .status(StatusCode::OK)
+            .body(Body::from(json!(short_url).to_string()))
+            .unwrap(),
     }
 }

@@ -1,8 +1,8 @@
 use anyhow::Result;
+use async_trait::async_trait;
 use redis::{AsyncCommands, Client};
 use redis::aio::MultiplexedConnection;
-use tide::log::error;
-use tide::utils::async_trait;
+use tracing::error;
 
 #[async_trait]
 pub trait RedisStore: Send + Sync {
@@ -50,7 +50,7 @@ impl RedisStore for RedisService {
             Some(c) => c
         };
 
-        if let Err(e) =conn.set::<_,_,()>(key,value).await {
+        if let Err(e) =conn.set_ex::<_,_,()>(key,value, 86400).await {
             error!("Failed to set key '{}': {}", key, e);
             return Err(e.into());
         }
