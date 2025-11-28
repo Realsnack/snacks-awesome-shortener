@@ -36,6 +36,8 @@ services:
       ME_CONFIG_BASICAUTH_ENABLED: true
       MONGO_INITDB_ROOT_USERNAME: mongoadmin
       MONGO_INITDB_ROOT_PASSWORD: mongopwd
+    volumes:
+      - ./mongo-init:/docker-entrypoint-initdb.d
     networks:
       - shortener
 
@@ -46,7 +48,7 @@ services:
       - "7080:8080"
     restart: always
     environment:
-      CW_MONGO_URI: mongodb://mongoadmin:mongopwd@mongodb:27017
+      CW_MONGO_URI: mongodb://compass_user:compass_pwd@mongodb:27017/?authSource=shorts
     networks:
       - shortener
 
