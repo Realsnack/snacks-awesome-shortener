@@ -12,7 +12,7 @@ services:
       SAS_PORT: 8080
       REDIS_URL: redis://valkey:6379
       MONGO_URL: mongodb://shorts_app:shorts_pwd@mongodb:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authSource=shorts
-      RUST_LOG: info
+      RUST_LOG: debug
     networks:
       - shortener
 
