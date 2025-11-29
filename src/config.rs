@@ -1,5 +1,6 @@
 use tracing::{debug, info};
 
+#[derive(Debug)]
 pub struct Config {
     pub redis_url: String,
     pub mongo_url: String,
@@ -8,6 +9,15 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn new(redis_url: String, mongo_url: String, app_address: String, app_port: String) -> Config {
+        Config {
+            redis_url,
+            mongo_url,
+            app_address,
+            app_port,
+        }
+    }
+
     pub fn from_env() -> Config {
         let app_address = std::env::var("SAS_IP").unwrap_or_else(|_| {
             debug!("SAS_IP not specified, using 0.0.0.0");
