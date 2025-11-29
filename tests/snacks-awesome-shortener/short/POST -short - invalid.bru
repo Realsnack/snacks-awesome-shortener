@@ -1,0 +1,28 @@
+meta {
+  name: POST /short - invalid
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/short
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "surl": "https://shorts.michalsvacina.cz/"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body: isJson
+  res.body.reason: contains No 'url'
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
