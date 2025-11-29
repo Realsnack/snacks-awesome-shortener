@@ -1,11 +1,10 @@
 use crate::models::short_url::ShortUrl;
 use crate::state::AppState;
-use axum::Json;
-use axum::body::Body;
+use axum::body::{Body, Bytes};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Redirect, Response};
-use serde_json::json;
+use serde_json::{json, Value};
 use tracing::{debug, info};
 
 pub async fn handle_short_redirect(
@@ -45,8 +44,18 @@ pub async fn handle_short_get(
 
 pub async fn handle_short_post(
     State(state): State<AppState>,
-    Json(body): Json<serde_json::Value>,
+    body_bytes: Bytes,
 ) -> Response {
+    let body: Value = match serde_json::from_slice(&body_bytes) {
+        Ok(v) => v,
+        Err(_) => {
+            return Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .body(Body::from("{\"reason\": \"No 'url' in request body\"}"))
+                .unwrap();
+        }
+    };
+
     debug!("Short post body: '{}'", body);
     let long_url = match body["url"].as_str() {
         None => {
