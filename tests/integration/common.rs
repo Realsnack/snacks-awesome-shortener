@@ -55,7 +55,7 @@ async fn setup_redis() -> (Option<ContainerAsync<GenericImage>>, String) {
         .get_host_port_ipv4(6379.tcp())
         .await
         .unwrap();
-    let redis_url = format!("redis://{redis_host}:{redis_port}");
+    let redis_url = format!("redis://{}:{}", redis_host, redis_port);
 
     (Some(container), redis_url)
 }
@@ -72,7 +72,7 @@ async fn setup_mongo() -> (Option<ContainerAsync<GenericImage>>, String) {
         .get_host_port_ipv4(27017.tcp())
         .await
         .unwrap();
-    let mongo_url = format!("mongodb://{mongo_host}:{mongo_port}");
+    let mongo_url = format!("mongodb://{}:{}", mongo_host, mongo_port);
 
     (Some(container), mongo_url)
 }
