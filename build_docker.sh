@@ -10,4 +10,5 @@ fi
 
 echo "Building docker image for $PACKAGE_NAME with tags sas:$VERSION and sas:latest"
 
-docker build -t sas:"$VERSION" -t sas:latest ./
+docker build -t registry.msvacina.cz/sas:"$VERSION" -t registry.msvacina.cz/sas:latest ./
+docker push -a registry.msvacina.cz/sas
