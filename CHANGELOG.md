@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/Realsnack/snacks-awesome-shortener/compare/v1.0.0...v1.0.1) (2025-11-30)
+
+
+### Bug Fixes
+
+* POST empty body returns string response instead of json ([c179b10](https://github.com/Realsnack/snacks-awesome-shortener/commit/c179b10f97edecc992889d89fb62859f90837a8c))
+* static ip/port assignment ([3536b14](https://github.com/Realsnack/snacks-awesome-shortener/commit/3536b14eac73aee0eda164da61656efcfc398b51))
+
 ## [1.0.0](https://github.com/Realsnack/snacks-awesome-shortener/compare/v0.1.0...v1.0.0) (2025-11-23)
 
 
