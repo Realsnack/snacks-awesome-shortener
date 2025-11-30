@@ -1,13 +1,12 @@
 [package]
 name = "snacks-awesome-shortener"
-version = "1.0.1"
+version = "1.0.2-beta"
 edition = "2024"
 
 [dependencies]
 axum = "0.8.7"
-async-std = { version = "1.13", features = ["attributes"] }
-async-trait = "0.1.85"
 anyhow = "1.0.100"
+async-trait = "0.1.89"
 mongodb = { version = "3.4.1" }
 rand = "0.9.2"
 redis = { version = "0.32.7", features = ["tokio-comp"] }
@@ -20,5 +19,6 @@ tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "json"] }
 
 [dev-dependencies]
+async-std = { version = "1.13", features = ["attributes"] }
 reqwest = { version = "0.12.24", features = ["json"] }
 testcontainers = "0.25.2"
