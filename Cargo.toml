@@ -21,4 +21,4 @@ tracing-subscriber = { version = "0.3.20", features = ["env-filter", "json"] }
 [dev-dependencies]
 async-std = { version = "1.13", features = ["attributes"] }
 reqwest = { version = "0.12.24", features = ["json"] }
-testcontainers = "0.25.2"
+testcontainers = "0.26.0"
