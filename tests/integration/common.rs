@@ -23,15 +23,15 @@ pub async fn build_test_env(redis_enabled: bool, mongo_enabled: bool) -> TestEnv
     let app_port = address.port();
 
     let app_config = Config::new(
-        redis_url,
-        mongo_url,
+        redis_url.clone(),
+        mongo_url.clone(),
         app_address.to_string(),
         app_port.to_string(),
     );
 
     setup_app(app_config, listener).await;
 
-    TestEnv { _redis_container: redis_container, _mongo_container: mongo_container,  app_port}
+    TestEnv { _redis_container: redis_container, redis_url, _mongo_container: mongo_container, mongo_url,  app_port}
 }
 
 async fn setup_app(app_config: Config, listener: tokio::net::TcpListener) {
@@ -79,6 +79,8 @@ async fn setup_mongo() -> (Option<ContainerAsync<GenericImage>>, String) {
 
 pub struct TestEnv {
     _redis_container: Option<ContainerAsync<GenericImage>>,
+    pub redis_url: String,
     _mongo_container: Option<ContainerAsync<GenericImage>>,
+    pub mongo_url: String,
     pub app_port: u16
 }
