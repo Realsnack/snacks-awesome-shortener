@@ -54,6 +54,3 @@ async fn post_short_redis_key_created_and_matching() {
 
     assert_eq!(redis_key.short_url, short_url);
 }
-
-#[tokio::test]
-async fn post_short_redis_unavailable() {}
