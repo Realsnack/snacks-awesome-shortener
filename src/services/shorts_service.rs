@@ -43,6 +43,9 @@ impl ShortsService {
 #[async_trait]
 impl Shortener for ShortsService {
     async fn generate_short_url(&self, long_url: String) -> Option<ShortUrl> {
+        let mut redis_fail = false;
+        let mut mongo_fail = false;
+
         let short_url = {
             let mut rng = rng();
             Self::generate_short(&mut rng)
@@ -60,14 +63,22 @@ impl Shortener for ShortsService {
             }
         };
 
-        if let Err(e) = self.redis_service.set(&short_url, &payload).await {
-            error!("Failed to save short url {}: {}", short_url, e);
-            return None;
+        match self.redis_service.set(&short_url, &payload).await {
+            Ok(_) => {}
+            Err(e) => {
+                error!("Failed to save short url {}: {}", short_url, e);
+                redis_fail = true;
+            }
         }
 
         if let Err(e) = self.save_short_to_mongo(short_url_object.clone()).await {
+            mongo_fail = true;
             error!("Failed to save mongo object: {}", e);
         };
+
+        if redis_fail && mongo_fail {
+            return None;
+        }
 
         Some(short_url_object)
     }

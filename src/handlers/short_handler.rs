@@ -70,7 +70,7 @@ pub async fn handle_short_post(
 
     let service = state.shorts_service;
     match service.generate_short_url(long_url.into()).await {
-        None => StatusCode::NOT_FOUND.into_response(),
+        None => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         Some(short_url) => Response::builder()
             .status(StatusCode::OK)
             .body(Body::from(json!(short_url).to_string()))
