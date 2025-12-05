@@ -1,4 +1,4 @@
-use reqwest::{redirect, Error, Response};
+use reqwest::{redirect};
 use crate::integration::common;
 use common::build_test_env;
 
