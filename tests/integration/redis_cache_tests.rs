@@ -2,6 +2,8 @@ use redis::{AsyncCommands, RedisResult};
 use snacks_awesome_shortener::models::short_url::ShortUrl;
 use crate::integration::common::build_test_env;
 
+const TEST_SHORTENED_URL: &str = "https://hltv.org";
+
 #[tokio::test]
 async fn post_short_redis_key_created() {
     let test_env = build_test_env(true, true).await;
@@ -15,7 +17,7 @@ async fn post_short_redis_key_created() {
 
     let resp = reqwest::Client::new()
         .post(format!("http://127.0.0.1:{}/short", test_env.app_port))
-        .json(&serde_json::json!({ "url": "https://hltv.org" }))
+        .json(&serde_json::json!({ "url": TEST_SHORTENED_URL }))
         .send()
         .await
         .unwrap();
@@ -41,7 +43,7 @@ async fn post_short_redis_key_created_and_matching() {
 
     let resp = reqwest::Client::new()
         .post(format!("http://127.0.0.1:{}/short", test_env.app_port))
-        .json(&serde_json::json!({ "url": "https://hltv.org" }))
+        .json(&serde_json::json!({ "url": TEST_SHORTENED_URL }))
         .send()
         .await
         .unwrap();
@@ -52,5 +54,5 @@ async fn post_short_redis_key_created_and_matching() {
     let result: String = connection.get(short_url).await.unwrap();
     let redis_key: ShortUrl = serde_json::from_str(result.as_str()).unwrap();
 
-    assert_eq!(redis_key.short_url, short_url);
+    assert_eq!(redis_key.long_url, TEST_SHORTENED_URL);
 }
