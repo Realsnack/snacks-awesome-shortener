@@ -7,11 +7,11 @@ use snacks_awesome_shortener::config::Config;
 pub async fn build_test_env(redis_enabled: bool, mongo_enabled: bool) -> TestEnv {
     let (redis_container, redis_url) = match redis_enabled {
         true => setup_redis().await,
-        false => (None, "redis://0.0.0.0:0".to_string())
+        false => (None, "redis://0.0.0.0:12345".to_string())
     };
     let (mongo_container, mongo_url) = match mongo_enabled {
         true => setup_mongo().await,
-        false => (None, "mongodb://0.0.0.0:0".to_string())
+        false => (None, "mongodb://0.0.0.0:12345?serverSelectionTimeoutMs=100".to_string())
     };
 
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", "127.0.0.1", "0"))
