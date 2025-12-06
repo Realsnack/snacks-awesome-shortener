@@ -1,8 +1,6 @@
 use redis::{AsyncCommands, RedisResult};
 use snacks_awesome_shortener::models::short_url::ShortUrl;
-use crate::integration::common::build_test_env;
-
-const TEST_SHORTENED_URL: &str = "https://hltv.org";
+use crate::integration::common::{build_test_env, BASE_URL, SHORT_ENDPOINT, TEST_SHORTENED_URL};
 
 #[tokio::test]
 async fn post_short_redis_key_created() {
@@ -16,7 +14,7 @@ async fn post_short_redis_key_created() {
     };
 
     let resp = reqwest::Client::new()
-        .post(format!("http://127.0.0.1:{}/short", test_env.app_port))
+        .post(format!("{}:{}/{}", BASE_URL, test_env.app_port, SHORT_ENDPOINT))
         .json(&serde_json::json!({ "url": TEST_SHORTENED_URL }))
         .send()
         .await
@@ -42,7 +40,7 @@ async fn post_short_redis_key_created_and_matching() {
     };
 
     let resp = reqwest::Client::new()
-        .post(format!("http://127.0.0.1:{}/short", test_env.app_port))
+        .post(format!("{}:{}/{}", BASE_URL, test_env.app_port, SHORT_ENDPOINT))
         .json(&serde_json::json!({ "url": TEST_SHORTENED_URL }))
         .send()
         .await
