@@ -76,8 +76,8 @@ async fn get_short_url_object_non_existing() {
 
     let resp = reqwest::Client::new()
         .get(format!(
-            "{}:{}/{}",
-            BASE_URL, test_env.app_port, SHORT_ENDPOINT
+            "{}:{}/{}/{}",
+            BASE_URL, test_env.app_port, SHORT_ENDPOINT, "should_not_exist"
         ))
         .send()
         .await
@@ -159,7 +159,7 @@ async fn get_short_url_object() {
         .unwrap();
 
     let resp = client
-        .get(format!("{}:{}/{}", BASE_URL, test_env.app_port, short_url))
+        .get(format!("{}:{}/{}/{}", BASE_URL, test_env.app_port, SHORT_ENDPOINT, short_url))
         .send()
         .await
         .unwrap();
