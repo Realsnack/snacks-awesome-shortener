@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/Realsnack/snacks-awesome-shortener/compare/v1.0.1...v1.0.2) (2025-12-06)
+
+
+### Bug Fixes
+
+* Post short is unavailable only when both mongo and redis are unavailable ([385d3b8](https://github.com/Realsnack/snacks-awesome-shortener/commit/385d3b8616deaed8e9d4035e38efccecbe5571f1))
+
 ## [1.0.1](https://github.com/Realsnack/snacks-awesome-shortener/compare/v1.0.0...v1.0.1) (2025-11-30)
 
 
