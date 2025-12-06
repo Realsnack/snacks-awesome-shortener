@@ -9,6 +9,7 @@ use tracing::{error, info, warn};
 pub trait RedisStore: Send + Sync {
     async fn get(&self, key: &str) -> Option<String>;
     async fn set(&self, key: &str, value: &str) -> Result<()>;
+    async fn ping_redis(&self) -> Result<String>;
 }
 
 pub struct RedisService {
@@ -63,5 +64,14 @@ impl RedisStore for RedisService {
         }
 
         Ok(())
+    }
+
+    async fn ping_redis(&self) -> Result<String> {
+        let mut conn = match self.get_connection().await {
+            None => return Err(anyhow::anyhow!("No redis connection")),
+            Some(c) => c,
+        };
+
+        Ok(conn.ping().await?)
     }
 }
