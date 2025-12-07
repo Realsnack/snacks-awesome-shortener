@@ -57,6 +57,10 @@ impl RedisStore for MockRedis {
         map.insert(key.to_string(), value.to_string());
         Ok(())
     }
+
+    async fn ping_redis(&self) -> anyhow::Result<String> {
+        todo!()
+    }
 }
 
 #[cfg(test)]

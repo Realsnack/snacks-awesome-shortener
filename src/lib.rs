@@ -6,8 +6,9 @@ use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 use tracing::{error, info};
 use config::Config;
-use crate::routes::{root_routes, shorts_routes};
+use crate::routes::{health_routes, root_routes, shorts_routes};
 use crate::services::{MongoService, RedisService, ShortsService};
+use crate::services::health_service::HealthService;
 use crate::state::AppState;
 
 pub mod handlers;
@@ -55,12 +56,14 @@ pub async fn build_app(config: &Config) -> Router {
     let redis_service = Arc::new(RedisService::new(redis_client));
     let mongo_client = Client::with_options(client_options).unwrap();
     let mongo_service = Arc::new(MongoService::new(mongo_client));
+    let health_service = Arc::new(HealthService::new(redis_service.clone(), mongo_service.clone()));
     let shorts_service = Arc::new(ShortsService::new(redis_service, mongo_service));
 
-    let state = AppState { shorts_service };
+    let state = AppState { shorts_service, health_service };
 
     Router::new()
         .merge(root_routes::root_routes())
+        .merge(health_routes::health_routes())
         .merge(shorts_routes::shorts_routes())
         .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
         .with_state(state)

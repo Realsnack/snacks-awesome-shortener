@@ -1,5 +1,5 @@
 use crate::models::mongo_short::MongoShortUrl;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use mongodb::{Client, Collection};
 use mongodb::bson::doc;
@@ -8,7 +8,8 @@ use tracing::error;
 #[async_trait]
 pub trait MongoRepository: Send + Sync {
     async fn find_short(&self, key: &str) -> Option<MongoShortUrl>;
-    async fn save_short(&self, short_url: MongoShortUrl) -> anyhow::Result<()>;
+    async fn save_short(&self, short_url: MongoShortUrl) -> Result<()>;
+    async fn ping_mongo(&self) -> Result<String>;
 }
 
 pub struct MongoService {
@@ -38,5 +39,12 @@ impl MongoRepository for MongoService {
         }
 
         Ok(())
+    }
+
+    async fn ping_mongo(&self) -> Result<String> {
+        match self.client.database("shorts").run_command(doc! { "ping": 1}).await {
+            Ok(response) => Ok(response.to_string()),
+            Err(e) => Err(anyhow!("Received mongo error: {}", e))
+        }
     }
 }
