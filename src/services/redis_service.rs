@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use redis::aio::MultiplexedConnection;
 use redis::{AsyncCommands, Client, ErrorKind};
@@ -54,7 +54,7 @@ impl RedisStore for RedisService {
 
     async fn set(&self, key: &str, value: &str) -> Result<()> {
         let mut conn = match self.get_connection().await {
-            None => return Err(anyhow::anyhow!("No redis connection")),
+            None => return Err(anyhow!("No redis connection")),
             Some(c) => c,
         };
 
@@ -67,11 +67,9 @@ impl RedisStore for RedisService {
     }
 
     async fn ping_redis(&self) -> Result<String> {
-        let mut conn = match self.get_connection().await {
-            None => return Err(anyhow::anyhow!("No redis connection")),
-            Some(c) => c,
-        };
-
-        Ok(conn.ping().await?)
+        match self.get_connection().await {
+            None => return Err(anyhow!("No redis connection")),
+            Some(mut c) => Ok(c.ping().await?)
+        }
     }
 }
