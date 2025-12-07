@@ -7,14 +7,14 @@ use tracing::debug;
 
 pub struct HealthService {
     redis_service: Arc<dyn RedisStore>,
-    _mongo_service: Arc<dyn MongoRepository>,
+    mongo_service: Arc<dyn MongoRepository>,
 }
 
 impl HealthService {
     pub fn new(redis_service: Arc<RedisService>, mongo_service: Arc<MongoService>) -> Self {
         Self {
             redis_service,
-            _mongo_service: mongo_service,
+            mongo_service,
         }
     }
 
@@ -26,17 +26,25 @@ impl HealthService {
 
     pub async fn get_redis_health(&self) -> Value {
         debug!("Getting redis health");
-        match self.redis_service.ping_redis().await {
-            Ok(ping_result) => {
-                json!({"PING": ping_result})
-            }
-            Err(_) => {
-                json!({"PING": "error"})
-            }
-        }
+        json!({
+            "ping": self.redis_service
+                .ping_redis()
+                .await
+                .unwrap_or_else(
+                    |e| e.to_string()
+                )
+        })
     }
 
-    pub async fn get_mongo_health(&self) -> Value{
-        json!({"health": "unknown"})
+    pub async fn get_mongo_health(&self) -> Value {
+        debug!("Getting mongo health");
+        json!({
+            "ping": self.mongo_service
+                .ping_mongo()
+                .await
+                .unwrap_or_else(
+                    |e| e.to_string()
+                )
+        })
     }
 }
