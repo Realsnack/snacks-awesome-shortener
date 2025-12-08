@@ -4,8 +4,9 @@ use testcontainers::runners::AsyncRunner;
 use tokio::task;
 use snacks_awesome_shortener::config::Config;
 
-pub const SHORT_ENDPOINT: &str = "short";
 pub const BASE_URL: &str = "http://127.0.0.1";
+pub const HEALTH_ENDPOINT: &str = "health";
+pub const SHORT_ENDPOINT: &str = "short";
 pub const TEST_SHORTENED_URL: &str = "https://hltv.org";
 
 pub async fn build_test_env(redis_enabled: bool, mongo_enabled: bool) -> TestEnv {
