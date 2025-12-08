@@ -13,6 +13,8 @@ get {
 assert {
   res.status: eq 200
   res.body: isJson
+  res.body.services.redis.ping: eq PONG
+  res.body.services.mongo.ping: contains ok
 }
 
 settings {
