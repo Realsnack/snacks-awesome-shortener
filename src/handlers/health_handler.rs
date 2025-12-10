@@ -12,6 +12,6 @@ pub async fn handle_health(State(state): State<AppState>) -> Response {
 
     Response::builder()
         .status(StatusCode::OK)
-        .body(Body::from(json!({"status": "UP", "services": services_health}).to_string()))
+        .body(Body::from(json!(services_health).to_string()))
         .unwrap()
 }
