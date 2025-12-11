@@ -45,11 +45,25 @@ pub struct HealthResponse {
 
 impl HealthResponse {
     pub fn new(services: HashMap<String, ServiceStatus>) -> Self {
-        let status = services
-            .values()
-            .map(|s| s.status)
-            .max()
-            .unwrap_or(HealthStatus::HEALTHY);
+        let mut saw_healthy = false;
+        let mut saw_degraded = false;
+        let mut saw_unhealthy = false;
+
+        for s in services.values() {
+            match s.status {
+                HealthStatus::HEALTHY => saw_healthy = true,
+                HealthStatus::DEGRADED => saw_degraded = true,
+                HealthStatus::UNHEALTHY => saw_unhealthy = true,
+            }
+        }
+
+        let status = if saw_healthy && !saw_degraded && !saw_unhealthy {
+            HealthStatus::HEALTHY
+        } else if saw_unhealthy && !saw_healthy && !saw_degraded {
+            HealthStatus::UNHEALTHY
+        } else {
+            HealthStatus::DEGRADED
+        };
 
         HealthResponse { status, services }
     }

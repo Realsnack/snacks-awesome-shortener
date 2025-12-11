@@ -15,12 +15,12 @@ async fn get_health_services_healthy() {
 
     let body: serde_json::Value = resp.json().await.unwrap();
     let status = body.get("status").unwrap();
-    let redis_service_ping = body.pointer("/services/redis/ping").unwrap();
-    let mongo_service_ping = body.pointer("/services/mongo/ping").unwrap();
+    let redis_service_ping = body.pointer("/services/redis/status").unwrap();
+    let mongo_service_status = body.pointer("/services/mongo/status").unwrap();
 
-    assert_eq!("UP", status);
-    assert_eq!("PONG", redis_service_ping);
-    assert!(mongo_service_ping.to_string().contains("ok"));
+    assert_eq!("HEALTHY", status);
+    assert_eq!("HEALTHY", redis_service_ping);
+    assert_eq!("HEALTHY", mongo_service_status);
 }
 
 #[tokio::test]
@@ -37,13 +37,14 @@ async fn get_health_redis_unavailable() {
         .unwrap();
 
     let body: serde_json::Value = resp.json().await.unwrap();
-    let status = body.get("status").unwrap();
-    let redis_service_ping = body.pointer("/services/redis/ping").unwrap();
-    let mongo_service_ping = body.pointer("/services/mongo/ping").unwrap();
 
-    assert_eq!("UP", status);
-    assert!(redis_service_ping.to_string().contains("No redis"));
-    assert!(mongo_service_ping.to_string().contains("ok"));
+    let status = body.get("status").unwrap();
+    let redis_service_ping = body.pointer("/services/redis/status").unwrap();
+    let mongo_service_status = body.pointer("/services/mongo/status").unwrap();
+
+    assert_eq!("DEGRADED", status);
+    assert_eq!("UNHEALTHY", redis_service_ping);
+    assert_eq!("HEALTHY", mongo_service_status);
 }
 
 #[tokio::test]
@@ -61,12 +62,12 @@ async fn get_health_mongo_unavailable() {
 
     let body: serde_json::Value = resp.json().await.unwrap();
     let status = body.get("status").unwrap();
-    let redis_service_ping = body.pointer("/services/redis/ping").unwrap();
-    let mongo_service_ping = body.pointer("/services/mongo/ping").unwrap();
+    let redis_service_ping = body.pointer("/services/redis/status").unwrap();
+    let mongo_service_status = body.pointer("/services/mongo/status").unwrap();
 
-    assert_eq!("UP", status);
-    assert_eq!("PONG", redis_service_ping);
-    assert!(mongo_service_ping.to_string().contains("Received mongo error"));
+    assert_eq!("DEGRADED", status);
+    assert_eq!("HEALTHY", redis_service_ping);
+    assert_eq!("UNHEALTHY", mongo_service_status);
 }
 
 #[tokio::test]
@@ -84,11 +85,10 @@ async fn get_health_redis_and_mongo_unavailable() {
 
     let body: serde_json::Value = resp.json().await.unwrap();
     let status = body.get("status").unwrap();
-    let redis_service_ping = body.pointer("/services/redis/ping").unwrap();
-    let mongo_service_ping = body.pointer("/services/mongo/ping").unwrap();
+    let redis_service_ping = body.pointer("/services/redis/status").unwrap();
+    let mongo_service_status = body.pointer("/services/mongo/status").unwrap();
 
-    // TODO: Service shouldn't be UP at this point
-    assert_eq!("UP", status);
-    assert!(redis_service_ping.to_string().contains("No redis"));
-    assert!(mongo_service_ping.to_string().contains("Received mongo error"));
+    assert_eq!("UNHEALTHY", status);
+    assert_eq!("UNHEALTHY", redis_service_ping);
+    assert_eq!("UNHEALTHY", mongo_service_status);
 }
