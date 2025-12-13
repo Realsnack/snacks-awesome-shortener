@@ -1,11 +1,13 @@
 use crate::models::short_url::ShortUrl;
 use crate::state::AppState;
-use axum::body::{Body, Bytes};
+use axum::body::{Body};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
+use axum::Json;
 use axum::response::{IntoResponse, Redirect, Response};
-use serde_json::{json, Value};
+use serde_json::{json};
 use tracing::{debug, info};
+use crate::models::short_request::ShortRequest;
 
 pub async fn handle_short_redirect(
     State(state): State<AppState>,
@@ -44,32 +46,12 @@ pub async fn handle_short_get(
 
 pub async fn handle_short_post(
     State(state): State<AppState>,
-    body_bytes: Bytes,
+    Json(short_request): Json<ShortRequest>,
 ) -> Response {
-    let body: Value = match serde_json::from_slice(&body_bytes) {
-        Ok(v) => v,
-        Err(_) => {
-            return Response::builder()
-                .status(StatusCode::BAD_REQUEST)
-                .body(Body::from("{\"reason\": \"No 'url' in request body\"}"))
-                .unwrap();
-        }
-    };
-
-    debug!("Short post body: '{}'", body);
-    let long_url = match body["url"].as_str() {
-        None => {
-            info!("No 'url' in request body: {}", body);
-            return Response::builder()
-                .status(StatusCode::BAD_REQUEST)
-                .body(Body::from("{\"reason\": \"No 'url' in request body\"}"))
-                .unwrap();
-        }
-        Some(url) => url,
-    };
+    debug!("Short request: '{:?}'", short_request);
 
     let service = state.shorts_service;
-    match service.generate_short_url(long_url.into()).await {
+    match service.generate_short_url(short_request.url).await {
         None => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         Some(short_url) => Response::builder()
             .status(StatusCode::OK)

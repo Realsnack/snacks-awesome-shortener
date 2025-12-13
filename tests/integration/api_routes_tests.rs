@@ -45,10 +45,11 @@ async fn post_short_url_rejects_invalid_body() {
         .await
         .unwrap();
     let status = resp.status();
-    let body: serde_json::Value = resp.json().await.unwrap();
+    let body = resp.text().await.unwrap();
+    println!("Body: {:?}", body);
 
-    assert_eq!(status, 400);
-    assert_eq!(body.get("reason").unwrap(), "No 'url' in request body")
+    assert_eq!(status, 422);
+    assert!(body.contains("missing field `url`"))
 }
 
 #[tokio::test]
@@ -60,14 +61,17 @@ async fn post_short_url_empty_body() {
             "{}:{}/{}",
             BASE_URL, test_env.app_port, SHORT_ENDPOINT
         ))
+        .header("Content-Type", "application/json")
         .send()
         .await
         .unwrap();
     let status = resp.status();
-    let body: serde_json::Value = resp.json().await.unwrap();
+    let body = resp.text().await.unwrap();
+
+    println!("Body: {:?}", body);
 
     assert_eq!(status, 400);
-    assert_eq!(body.get("reason").unwrap(), "No 'url' in request body")
+    assert!(body.contains("Failed to parse"));
 }
 
 #[tokio::test]
