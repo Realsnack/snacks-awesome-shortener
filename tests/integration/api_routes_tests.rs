@@ -2,6 +2,7 @@ use crate::integration::common;
 use crate::integration::common::{BASE_URL, SHORT_ENDPOINT, TEST_SHORTENED_URL};
 use common::build_test_env;
 use reqwest::redirect;
+use snacks_awesome_shortener::models::short_url::ShortUrl;
 
 #[tokio::test]
 async fn post_short_url_creates_entry() {
@@ -19,16 +20,12 @@ async fn post_short_url_creates_entry() {
 
     let status = resp.status();
     let body: serde_json::Value = resp.json().await.unwrap();
-    let short_url = body.get("short_url");
-    let long_url = body.get("long_url");
-    let expiration = body.get("expiration");
+    let short_url: ShortUrl = serde_json::from_value(body).unwrap();
 
     assert_eq!(status, 200);
-    assert!(short_url.is_some());
-    assert_eq!(short_url.unwrap().to_string().len(), 8);
-    assert!(long_url.is_some());
-    assert_eq!(long_url.unwrap(), TEST_SHORTENED_URL);
-    assert!(expiration.is_some());
+    assert_eq!(short_url.short_url.to_string().len(), 6);
+    assert!(!short_url.long_url.is_empty());
+    assert_eq!(short_url.long_url, TEST_SHORTENED_URL);
 }
 
 #[tokio::test]
