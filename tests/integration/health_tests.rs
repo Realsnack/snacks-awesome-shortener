@@ -88,6 +88,9 @@ async fn get_health_redis_and_mongo_unavailable() {
     let redis_service_ping = body.pointer("/services/redis/status").unwrap();
     let mongo_service_status = body.pointer("/services/mongo/status").unwrap();
 
+    println!("Response body: {}", body);
+    println!("Redis url: {}", test_env.redis_url);
+
     assert_eq!("UNHEALTHY", status);
     assert_eq!("UNHEALTHY", redis_service_ping);
     assert_eq!("UNHEALTHY", mongo_service_status);

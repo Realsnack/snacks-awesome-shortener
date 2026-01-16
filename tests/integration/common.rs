@@ -3,6 +3,7 @@ use testcontainers::core::{IntoContainerPort, WaitFor};
 use testcontainers::runners::AsyncRunner;
 use tokio::task;
 use snacks_awesome_shortener::config::Config;
+use snacks_awesome_shortener::services::redis_service::RedisMode;
 
 pub const BASE_URL: &str = "http://127.0.0.1";
 pub const HEALTH_ENDPOINT: &str = "health";
@@ -28,7 +29,9 @@ pub async fn build_test_env(redis_enabled: bool, mongo_enabled: bool) -> TestEnv
     let app_port = address.port();
 
     let app_config = Config::new(
-        redis_url.clone(),
+        Some(redis_url.clone()),
+        None,
+        RedisMode::Standalone,
         mongo_url.clone(),
         app_address.to_string(),
         app_port.to_string(),

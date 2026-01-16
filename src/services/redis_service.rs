@@ -1,9 +1,16 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 use redis::aio::MultiplexedConnection;
+use redis::sentinel::SentinelClient;
 use redis::{AsyncCommands, Client, ErrorKind};
-
+use tokio::sync::Mutex;
 use tracing::{error, info, warn};
+
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
+pub enum RedisMode {
+    Standalone,
+    Sentinel,
+}
 
 #[async_trait]
 pub trait RedisStore: Send + Sync {
@@ -13,22 +20,32 @@ pub trait RedisStore: Send + Sync {
 }
 
 pub struct RedisService {
-    client: Client,
+    client: Option<Client>,
+    sentinel_client: Option<Mutex<SentinelClient>>,
+    redis_mode: RedisMode,
 }
 
 impl RedisService {
-    pub fn new(client: Client) -> Self {
-        Self { client }
+    pub fn new(
+        client: Option<Client>,
+        sentinel_client: Option<Mutex<SentinelClient>>,
+        redis_mode: RedisMode,
+    ) -> Self {
+        Self {
+            client,
+            sentinel_client,
+            redis_mode,
+        }
     }
 
     async fn get_connection(&self) -> Option<MultiplexedConnection> {
-        self.client
-            .get_multiplexed_async_connection()
-            .await
-            .map_err(|e| {
-                error!("Error while getting redis connection: {}", e);
-            })
-            .ok()
+        match self.redis_mode {
+            RedisMode::Standalone => self.client.as_ref()?.get_multiplexed_async_connection().await.ok(),
+            RedisMode::Sentinel => {
+                let mut sentinel = self.sentinel_client.as_ref()?.lock().await;
+                sentinel.get_async_connection().await.ok()
+            }
+        }
     }
 }
 
@@ -69,7 +86,7 @@ impl RedisStore for RedisService {
     async fn ping_redis(&self) -> Result<String> {
         match self.get_connection().await {
             None => return Err(anyhow!("No redis connection")),
-            Some(mut c) => Ok(c.ping().await?)
+            Some(mut c) => Ok(c.ping().await?),
         }
     }
 }

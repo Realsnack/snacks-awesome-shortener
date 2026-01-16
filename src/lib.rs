@@ -1,15 +1,17 @@
-use std::sync::Arc;
+use crate::routes::{health_routes, root_routes, shorts_routes};
+use crate::services::health_service::HealthService;
+use crate::services::redis_service::RedisMode;
+use crate::services::{MongoService, RedisService, ShortsService};
+use crate::state::AppState;
 use axum::Router;
+use config::Config;
 use mongodb::Client;
 use mongodb::options::{ClientOptions, ServerApi, ServerApiVersion};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
-use tracing::{error, info};
-use config::Config;
-use crate::routes::{health_routes, root_routes, shorts_routes};
-use crate::services::{MongoService, RedisService, ShortsService};
-use crate::services::health_service::HealthService;
-use crate::state::AppState;
+use tracing::{debug, error, info};
 
 pub mod handlers;
 pub mod models;
@@ -52,14 +54,47 @@ pub async fn build_app(config: &Config) -> Router {
     let server_api = ServerApi::builder().version(ServerApiVersion::V1).build();
     client_options.server_api = Some(server_api);
 
-    let redis_client = redis::Client::open(config.redis_url.clone()).unwrap();
-    let redis_service = Arc::new(RedisService::new(redis_client));
+    let redis_service = match config.redis_mode {
+        RedisMode::Standalone => {
+            info!("Redis running in standalone mode");
+            let redis_client = redis::Client::open(config.redis_url.clone().unwrap()).unwrap();
+            Arc::new(RedisService::new(
+                Some(redis_client),
+                None,
+                RedisMode::Standalone
+            ))
+        },
+        RedisMode::Sentinel => {
+            info!("Redis running in sentinel mode");
+            let sentinel_connection_info = redis::sentinel::SentinelNodeConnectionInfo::default();
+            let sentinel = redis::sentinel::SentinelClient::build(
+                config.sentinel_url.clone().unwrap(),
+                String::from("sas-valkey"),
+                Some(sentinel_connection_info),
+                redis::sentinel::SentinelServerType::Master,
+            ).unwrap();
+            debug!("Using sentinel config: {:?}", config.sentinel_url);
+
+            Arc::new(RedisService::new(
+                None,
+                Some(Mutex::new(sentinel)),
+                RedisMode::Sentinel
+            ))
+        }
+    };
+
     let mongo_client = Client::with_options(client_options).unwrap();
     let mongo_service = Arc::new(MongoService::new(mongo_client));
-    let health_service = Arc::new(HealthService::new(redis_service.clone(), mongo_service.clone()));
+    let health_service = Arc::new(HealthService::new(
+        redis_service.clone(),
+        mongo_service.clone(),
+    ));
     let shorts_service = Arc::new(ShortsService::new(redis_service, mongo_service));
 
-    let state = AppState { shorts_service, health_service };
+    let state = AppState {
+        shorts_service,
+        health_service,
+    };
 
     Router::new()
         .merge(root_routes::root_routes())
@@ -70,7 +105,8 @@ pub async fn build_app(config: &Config) -> Router {
 }
 
 pub async fn run(app: Router, config: Config) {
-    match tokio::net::TcpListener::bind(format!("{}:{}", config.app_address, config.app_port)).await {
+    match tokio::net::TcpListener::bind(format!("{}:{}", config.app_address, config.app_port)).await
+    {
         Ok(listener) => {
             axum::serve(listener, tower::make::Shared::new(app))
                 .await
