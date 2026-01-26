@@ -36,10 +36,14 @@ impl HealthService {
             Err(e) => (HealthStatus::UNHEALTHY, e.to_string()),
         };
 
+        let redis_mode = self.redis_service.get_redis_mode();
+        let _redis_replication = self.redis_service.get_replication_info().await;
+
         ServiceStatus::with_details(
             status,
             HashMap::from([
-                ("ping".to_string(), message)
+                ("ping".to_string(), message),
+                ("redisMode".to_string(), format!("{:?}", redis_mode))
             ])
         )
     }

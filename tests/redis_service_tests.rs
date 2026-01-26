@@ -1,4 +1,4 @@
-use snacks_awesome_shortener::services::redis_service::RedisStore;
+use snacks_awesome_shortener::services::redis_service::{RedisMode, RedisStore};
 use std::collections::HashMap;
 use std::sync::Arc;
 use async_std::sync::Mutex;
@@ -59,6 +59,14 @@ impl RedisStore for MockRedis {
     }
 
     async fn ping_redis(&self) -> anyhow::Result<String> {
+        todo!()
+    }
+
+    async fn get_replication_info(&self) -> Option<String> {
+        todo!()
+    }
+
+    fn get_redis_mode(&self) -> RedisMode {
         todo!()
     }
 }

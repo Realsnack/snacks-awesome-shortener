@@ -4,7 +4,7 @@ use redis::aio::MultiplexedConnection;
 use redis::sentinel::SentinelClient;
 use redis::{AsyncCommands, Client, ErrorKind};
 use tokio::sync::Mutex;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
 pub enum RedisMode {
@@ -17,6 +17,8 @@ pub trait RedisStore: Send + Sync {
     async fn get(&self, key: &str) -> Option<String>;
     async fn set(&self, key: &str, value: &str) -> Result<()>;
     async fn ping_redis(&self) -> Result<String>;
+    fn get_redis_mode(&self) -> RedisMode;
+    async fn get_replication_info(&self) -> Option<String>;
 }
 
 pub struct RedisService {
@@ -87,6 +89,23 @@ impl RedisStore for RedisService {
         match self.get_connection().await {
             None => return Err(anyhow!("No redis connection")),
             Some(mut c) => Ok(c.ping().await?),
+        }
+    }
+
+    fn get_redis_mode(&self) -> RedisMode {
+        self.redis_mode
+    }
+    async fn get_replication_info(&self) -> Option<String> {
+        match self.get_connection().await {
+            None => None,
+            Some(mut connection) => {
+                let result: String = redis::cmd("INFO").arg("replication").query_async(&mut connection).await.unwrap();
+
+                for string in result.split("\r\n") {
+                    debug!("Splitted: {}", string);
+                }
+                Some("sh".into())
+            }
         }
     }
 }

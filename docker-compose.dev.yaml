@@ -38,6 +38,7 @@ services:
     environment:
       ALLOW_EMPTY_PASSWORD: yes
       VALKEY_PORT_NUMBER: 6380
+      VALKEY_REPLICA_PORT: 6380
       VALKEY_PRIMARY_HOST: valkey01
       VALKEY_REPLICATION_MODE: replica
     networks:
@@ -52,6 +53,7 @@ services:
     environment:
       ALLOW_EMPTY_PASSWORD: yes
       VALKEY_PORT_NUMBER: 6381
+      VALKEY_REPLICA_PORT: 6381
       VALKEY_PRIMARY_HOST: valkey01
       VALKEY_REPLICATION_MODE: replica
     networks:
@@ -67,6 +69,8 @@ services:
       VALKEY_PRIMARY_HOST: valkey01
       VALKEY_PRIMARY_SET: sas-valkey
       VALKEY_SENTINEL_ANNOUNCE_HOSTNAMES: yes
+      VALKEY_SENTINEL_DOWN_AFTER_MILLISECONDS: 10000
+      VALKEY_SENTINEL_FAILOVER_TIMEOUT: 20000
     networks:
       - shortener
 
@@ -80,6 +84,8 @@ services:
       VALKEY_PRIMARY_HOST: valkey01
       VALKEY_PRIMARY_SET: sas-valkey
       VALKEY_SENTINEL_ANNOUNCE_HOSTNAMES: yes
+      VALKEY_SENTINEL_DOWN_AFTER_MILLISECONDS: 10000
+      VALKEY_SENTINEL_FAILOVER_TIMEOUT: 20000
     networks:
       - shortener
 
@@ -93,6 +99,8 @@ services:
       VALKEY_PRIMARY_HOST: valkey01
       VALKEY_PRIMARY_SET: sas-valkey
       VALKEY_SENTINEL_ANNOUNCE_HOSTNAMES: yes
+      VALKEY_SENTINEL_DOWN_AFTER_MILLISECONDS: 10000
+      VALKEY_SENTINEL_FAILOVER_TIMEOUT: 20000
     networks:
       - shortener
 
