@@ -3,7 +3,7 @@ name: release-please
 on:
   push:
     branches:
-      - main  # Runs on push to main to detect new changes
+      - dev
 
 jobs:
   release:
