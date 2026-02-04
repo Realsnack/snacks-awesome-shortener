@@ -1,3 +1,26 @@
+db = db.getSiblingDB('admin')
+
+db.createUser(
+  {
+    user: "monitoring",
+    pwd: "monitoring",
+    roles: [
+      {
+        "role": "clusterMonitor",
+        "db": "admin"
+      },
+      {
+        "role": "read",
+        "db": "local"
+      },
+      {
+        "role": "read",
+        "db": "shorts"
+      }
+    ]
+  }
+)
+
 db = db.getSiblingDB('shorts');
 
 db.createUser({
@@ -15,3 +38,4 @@ db.createUser({
         { role: "read", db: "shorts" }
     ]
 });
+
