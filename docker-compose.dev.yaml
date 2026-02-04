@@ -1,8 +1,6 @@
 services:
   sas:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: registry.msvacina.cz/sas:latest
     container_name: sas
     ports:
       - "8080:8080"
@@ -10,97 +8,18 @@ services:
     environment:
       SAS_IP: 0.0.0.0
       SAS_PORT: 8080
-      #REDIS_URL: redis://valkey01:6379
-      REDIS_USE_SENTINEL: true
-      SENTINEL_URL: redis://sentinel01:26379,redis://sentinel02:26380,redis://sentinel03:26381
+      REDIS_URL: redis://valkey:6379
       MONGO_URL: mongodb://shorts_app:shorts_pwd@mongodb:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authSource=shorts
-      RUST_LOG: debug
+      RUST_LOG: info
     networks:
       - shortener
 
-  valkey01:
-    image: bitnami/valkey:latest
-    container_name: valkey01
+  valkey:
+    image: valkey/valkey:latest
+    container_name: valkey
     ports:
       - "6379:6379"
     restart: always
-    environment:
-      ALLOW_EMPTY_PASSWORD: yes
-    networks:
-      - shortener
-
-  valkey02:
-    image: bitnami/valkey:latest
-    container_name: valkey02
-    ports:
-      - "6380:6380"
-    restart: always
-    environment:
-      ALLOW_EMPTY_PASSWORD: yes
-      VALKEY_PORT_NUMBER: 6380
-      VALKEY_REPLICA_PORT: 6380
-      VALKEY_PRIMARY_HOST: valkey01
-      VALKEY_REPLICATION_MODE: replica
-    networks:
-      - shortener
-
-  valkey03:
-    image: bitnami/valkey:latest
-    container_name: valkey03
-    ports:
-      - "6381:6381"
-    restart: always
-    environment:
-      ALLOW_EMPTY_PASSWORD: yes
-      VALKEY_PORT_NUMBER: 6381
-      VALKEY_REPLICA_PORT: 6381
-      VALKEY_PRIMARY_HOST: valkey01
-      VALKEY_REPLICATION_MODE: replica
-    networks:
-      - shortener
-
-  sentinel01:
-    image: bitnami/valkey-sentinel:latest
-    container_name: sentinel01
-    ports:
-      - "26379:26379"
-    restart: always
-    environment:
-      VALKEY_PRIMARY_HOST: valkey01
-      VALKEY_PRIMARY_SET: sas-valkey
-      VALKEY_SENTINEL_ANNOUNCE_HOSTNAMES: yes
-      VALKEY_SENTINEL_DOWN_AFTER_MILLISECONDS: 10000
-      VALKEY_SENTINEL_FAILOVER_TIMEOUT: 20000
-    networks:
-      - shortener
-
-  sentinel02:
-    image: bitnami/valkey-sentinel:latest
-    container_name: sentinel02
-    ports:
-      - "26380:26379"
-    restart: always
-    environment:
-      VALKEY_PRIMARY_HOST: valkey01
-      VALKEY_PRIMARY_SET: sas-valkey
-      VALKEY_SENTINEL_ANNOUNCE_HOSTNAMES: yes
-      VALKEY_SENTINEL_DOWN_AFTER_MILLISECONDS: 10000
-      VALKEY_SENTINEL_FAILOVER_TIMEOUT: 20000
-    networks:
-      - shortener
-
-  sentinel03:
-    image: bitnami/valkey-sentinel:latest
-    container_name: sentinel03
-    ports:
-      - "26381:26379"
-    restart: always
-    environment:
-      VALKEY_PRIMARY_HOST: valkey01
-      VALKEY_PRIMARY_SET: sas-valkey
-      VALKEY_SENTINEL_ANNOUNCE_HOSTNAMES: yes
-      VALKEY_SENTINEL_DOWN_AFTER_MILLISECONDS: 10000
-      VALKEY_SENTINEL_FAILOVER_TIMEOUT: 20000
     networks:
       - shortener
 
