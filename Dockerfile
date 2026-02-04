@@ -13,7 +13,7 @@ COPY . .
 RUN cargo build --release
 RUN mv ./target/release/snacks-awesome-shortener ./app
 
-FROM phusion/baseimage:noble-1.0.2 AS runtime
+FROM bitnami/minideb:latest AS runtime
 LABEL authors="michalsvacina"
 WORKDIR /app
 COPY --from=builder /app/app /usr/local/bin/
