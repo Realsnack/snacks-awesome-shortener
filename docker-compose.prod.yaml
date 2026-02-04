@@ -119,17 +119,6 @@ services:
     networks:
       - shortener
 
-  compass-web:
-    image: haohanyang/compass-web
-    container_name: compass-web
-    ports:
-      - "7080:8080"
-    restart: always
-    environment:
-      CW_MONGO_URI: mongodb://compass_user:compass_pwd@mongodb:27017/?authSource=shorts
-    networks:
-      - shortener
-
 networks:
   shortener:
     driver: bridge
