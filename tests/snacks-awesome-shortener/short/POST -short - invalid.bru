@@ -17,9 +17,9 @@ body:json {
 }
 
 assert {
-  res.status: eq 400
-  res.body: isJson
-  res.body.reason: contains No 'url'
+  res.status: eq 422
+  res.body: isNotEmpty
+  res.body: contains "missing field"
 }
 
 settings {
