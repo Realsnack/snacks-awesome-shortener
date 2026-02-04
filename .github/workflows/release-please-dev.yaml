@@ -20,9 +20,7 @@ jobs:
       - name: Release Please (dev)
         uses: google-github-actions/release-please-action@v3
         with:
-          release-type: rust
-          package-name: snacks-awesome-shortener
-          default-branch: dev
+          command: manifest
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
