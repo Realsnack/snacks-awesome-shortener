@@ -2,11 +2,9 @@ name: rust-clippy analyze
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
   pull_request:
-    branches: [ "main" ]
-  schedule:
-    - cron: '45 14 * * 4'  # Weekly run
+    branches: [ "main", "dev" ]
 
 jobs:
   rust-clippy-analyze:
