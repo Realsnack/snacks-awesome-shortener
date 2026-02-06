@@ -2,8 +2,9 @@ FROM lukemathwalker/cargo-chef:latest-rust-alpine AS chef
 WORKDIR /app
 
 FROM chef AS planner
-COPY ./Cargo.toml ./Cargo.lock ./
-COPY ./src ./src
+ENV app="api_gateway"
+COPY ./${app}/Cargo.toml ./Cargo.lock ./
+COPY ./${app}/src ./src
 RUN cargo chef prepare
 
 FROM chef AS builder
@@ -11,7 +12,7 @@ COPY --from=planner /app/recipe.json .
 RUN cargo chef cook --release
 COPY . .
 RUN cargo build --release
-RUN mv ./target/release/api_gateway ./app
+RUN mv ./target/release/${app} ./app
 
 FROM bitnami/minideb:latest AS runtime
 LABEL authors="michalsvacina"
