@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.1.0](https://github.com/Realsnack/snacks-awesome-shortener/compare/v1.0.1...v1.1.0) (2026-02-06)
+
+
+### Features
+
+* add monitoring user to mongodb ([33eae39](https://github.com/Realsnack/snacks-awesome-shortener/commit/33eae3970b4403440ac2c94d113aef54d56c2ea8))
+* add support for redis in sentinel mode ([e1ee9ef](https://github.com/Realsnack/snacks-awesome-shortener/commit/e1ee9ef7104f372bb4fc4cafbc4fd0e8bda07de1))
+* added endpoint to get health per service ([50b1972](https://github.com/Realsnack/snacks-awesome-shortener/commit/50b1972b9f8fb48f97698f499d994a7c12f60a16))
+* added mongo health check ([0d215e8](https://github.com/Realsnack/snacks-awesome-shortener/commit/0d215e821596fd5357fee4d46cab3f506b400c27))
+* Added sentinel support to redis service ([669eb40](https://github.com/Realsnack/snacks-awesome-shortener/commit/669eb40781f61a39673e1af1c3ec9549ef8ee103))
+* Created redis health check ([9cb9865](https://github.com/Realsnack/snacks-awesome-shortener/commit/9cb9865bee0f3e711339d77569c58e37654abb93))
+* created request/response models ([9df9b44](https://github.com/Realsnack/snacks-awesome-shortener/commit/9df9b4490c7cff163b6f4eb481a40ff40374de94))
+* POST Short uses Request model ([73b10ee](https://github.com/Realsnack/snacks-awesome-shortener/commit/73b10eefd90a313d1c07ac7cf2cf42f7152ec14e))
+* refactored redis health check ([1234c28](https://github.com/Realsnack/snacks-awesome-shortener/commit/1234c28005890b77231de3e9471a03ce79732df4))
+* Use HealthResponse for health endpoint ([192315e](https://github.com/Realsnack/snacks-awesome-shortener/commit/192315eb6c013f852f454fdd6e9fa78d717c095f))
+
+
+### Bug Fixes
+
+* Post short is unavailable only when both mongo and redis are unavailable ([385d3b8](https://github.com/Realsnack/snacks-awesome-shortener/commit/385d3b8616deaed8e9d4035e38efccecbe5571f1))
+
 ## [1.0.1](https://github.com/Realsnack/snacks-awesome-shortener/compare/v1.0.0...v1.0.1) (2025-11-30)
 
 
