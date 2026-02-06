@@ -41,6 +41,7 @@ async fn send_persistence_request() -> Result<(), async_nats::Error> {
     println!("Publishing message: {:?}", data);
     let result = jetstream.publish("data_persistor::request", data.to_vec()?.into()).await?;
     println!("Result: {:?}", result);
+    jetstream.client().flush().await?;
 
     Ok(())
 }
