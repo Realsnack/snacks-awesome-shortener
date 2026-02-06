@@ -1,3 +1,4 @@
+use common::models::persistence_request::PersistenceRequest;
 use futures_util::{StreamExt, TryStreamExt};
 
 #[tokio::main]
@@ -23,7 +24,8 @@ async fn main() -> Result<(), async_nats::Error> {
 
     let mut messages = consumer.messages().await?.take(100);
     while let Ok(Some(message)) = messages.try_next().await {
-        println!("message receiver: {:?}", message);
+        let decoded_payload = PersistenceRequest::from_vec(&message.message.payload.to_vec());
+        println!("message received: {:?}", decoded_payload);
         message.ack().await?;
 
         jetstream.publish("data_persistor::response", "Confirm".into()).await?;
