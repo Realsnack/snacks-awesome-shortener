@@ -6,20 +6,6 @@ use config::Config;
 
 pub mod config;
 
-pub fn setup_logging() {
-    if cfg!(debug_assertions) {
-        tracing_subscriber::fmt()
-            .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-            // .json()
-            .init();
-    } else {
-        tracing_subscriber::fmt()
-            .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-            .json()
-            .init();
-    }
-}
-
 pub async fn build_app(config: &Config) -> Router {
     const VERSION: &str = env!("CARGO_PKG_VERSION");
     const NAME: &str = env!("CARGO_PKG_NAME");
