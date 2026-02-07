@@ -30,12 +30,38 @@ services:
     restart: always
     depends_on:
       - nats
+      - data-persistor
+      - shorts-service
 
   data-persistor:
     build:
       context: .
       args:
         SERVICE_NAME: data_persistor
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - nats
+      - shorts-service
+
+  health-service:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: health_service
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - nats
+      - api-gateway
+      - data-persistor
+      - shorts-service
+
+  shorts-service:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: shorts_service
       dockerfile: Dockerfile
     restart: always
     depends_on:
