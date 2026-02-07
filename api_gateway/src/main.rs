@@ -1,5 +1,6 @@
 use api_gateway::config::Config;
-use api_gateway::{build_app, run, setup_logging};
+use api_gateway::{build_app, run};
+use common::setup_logging;
 
 #[tokio::main]
 async fn main() {
