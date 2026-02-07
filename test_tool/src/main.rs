@@ -2,6 +2,8 @@ use std::time::SystemTime;
 use clap::{Parser, Subcommand};
 use common::models::persistence_request::PersistenceRequest;
 use common::models::short_url::ShortUrl;
+use common::setup_logging;
+use tracing::info;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -16,8 +18,10 @@ enum Commands {
 }
 
 async fn send_persistence_request() -> Result<(), async_nats::Error> {
+    setup_logging();
+
     let nats_url = "localhost:4222";
-    println!("Connecting to: '{}'", nats_url);
+    info!("Connecting to: '{}'", nats_url);
     let client = async_nats::connect(nats_url).await?;
     let jetstream = async_nats::jetstream::new(client);
 
@@ -38,9 +42,8 @@ async fn send_persistence_request() -> Result<(), async_nats::Error> {
             ..Default::default()
         }).await?;
 
-    println!("Publishing message: {:?}", data);
-    let result = jetstream.publish("data_persistor::request", data.to_vec()?.into()).await?;
-    println!("Result: {:?}", result);
+    info!("Publishing message: {:?}", data);
+    jetstream.publish("data_persistor::request", data.to_vec()?.into()).await?;
     jetstream.client().flush().await?;
 
     Ok(())
@@ -50,7 +53,7 @@ async fn send_persistence_request() -> Result<(), async_nats::Error> {
 async fn main() -> Result<(), async_nats::Error> {
     let args = Args::parse();
 
-    println!("Action chosen {:?}", args.command);
+    info!("Action chosen {:?}", args.command);
 
     match args.command {
         Commands::SendPersistenceRequest => send_persistence_request().await?
