@@ -2011,7 +2011,6 @@ dependencies = [
  "async-nats",
  "bytes",
  "common",
- "futures-util",
  "tokio",
  "tracing",
 ]
