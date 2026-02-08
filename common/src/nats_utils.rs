@@ -1,8 +1,8 @@
-use async_nats::jetstream::consumer::Consumer;
 use async_nats::jetstream::{Context, Message};
+use async_nats::jetstream::consumer::Consumer;
 use async_nats::jetstream::context::CreateStreamError;
 use async_nats::jetstream::stream::{Config, ConsumerError, Stream};
-use futures_util::{TryStreamExt, StreamExt};
+use futures_util::{StreamExt, TryStreamExt};
 
 pub async fn create_consumer(
         config: crate::config::Config,
@@ -22,7 +22,7 @@ pub async fn create_consumer(
     while let Ok(Some(message)) = messages.try_next().await {
         process_message_func(&message);
         message.ack().await?;
-        jetstream.publish("data_persistor::response", "Confirm".into()).await?;
+        jetstream.publish(config.response_stream.clone(), "Confirm".into()).await?;
     }
 
     Ok(())
