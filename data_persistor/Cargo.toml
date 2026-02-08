@@ -7,5 +7,4 @@ edition = "2024"
 async-nats = "0.46.0"
 common = { path = "../common"}
 tokio = { version = "1.49.0", features = ["full"] }
-futures-util = "0.3.31"
 tracing = "0.1.44"
