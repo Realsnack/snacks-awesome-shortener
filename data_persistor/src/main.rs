@@ -22,7 +22,7 @@ async fn main() -> Result<(), async_nats::Error> {
 
 pub async fn process_message(message: &Message) {
     debug!("Message payload: {:?}", &message.message);
-    let decoded_payload = PersistenceRequest::from_vec(&message.message.payload.to_vec());
+    let decoded_payload = PersistenceRequest::from_bytes(&message.message.payload);
     info!("message received: {:?}", decoded_payload);
 
     // TODO: Save into redis and db

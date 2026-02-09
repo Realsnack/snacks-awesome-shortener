@@ -16,8 +16,8 @@ impl PersistenceRequest {
         rmp_serde::to_vec(&self)
     }
 
-    pub fn from_vec(
-        request_bytes: &Vec<u8>,
+    pub fn from_bytes(
+        request_bytes: &[u8],
     ) -> Result<PersistenceRequest, rmp_serde::decode::Error> {
         rmp_serde::from_slice(request_bytes)
     }

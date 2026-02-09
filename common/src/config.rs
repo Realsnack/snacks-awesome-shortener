@@ -37,7 +37,7 @@ impl Config {
             format!("{}::response", cargo_pkg_name)
         });
 
-        let consumer_name = std::env::var("CONSUMER_NAME").unwrap_or({ cargo_pkg_name });
+        let consumer_name = std::env::var("CONSUMER_NAME").unwrap_or(cargo_pkg_name);
 
         let nats_url = std::env::var("NATS_URL").unwrap_or_else(|_| {
             info!("No NATS_URL configured, using localhost:4222");

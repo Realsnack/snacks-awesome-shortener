@@ -64,7 +64,7 @@ pub async fn process_message(message: &Message, config: &Config) {
 }
 
 fn process_get_short(message: &bytes::Bytes) {
-    let decoded_payload = GetShortRequest::from_vec(&message.to_vec()).unwrap();
+    let decoded_payload = GetShortRequest::from_bytes(message).unwrap();
     info!("message received: {:?}", decoded_payload);
 }
 
@@ -72,7 +72,7 @@ async fn process_create_short(
     message: &bytes::Bytes,
     config: &Config,
 ) -> Result<(), async_nats::Error> {
-    let decoded_payload = CreateShortRequest::from_vec(&message.to_vec())?;
+    let decoded_payload = CreateShortRequest::from_bytes(message)?;
     info!("message received: {:?}", decoded_payload);
 
     let short = {
