@@ -1,4 +1,4 @@
-use tracing::warn;
+use tracing::{info, warn};
 
 #[derive(Debug)]
 pub struct Config {
@@ -10,11 +10,13 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(request_stream: String,
-               response_stream: String,
-               consumer_name: String,
-               nats_url: String,
-               request_stream_max_messages: i64) -> Config {
+    pub fn new(
+        request_stream: String,
+        response_stream: String,
+        consumer_name: String,
+        nats_url: String,
+        request_stream_max_messages: i64,
+    ) -> Config {
         Config {
             request_stream,
             response_stream,
@@ -24,21 +26,22 @@ impl Config {
         }
     }
 
-    pub fn from_env() -> Config {
+    pub fn from_env(cargo_pkg_name: String) -> Config {
         let request_stream = std::env::var("REQUEST_STREAM").unwrap_or_else(|_| {
-            panic!("No REQUEST_STREAM configured");
+            info!("No REQUEST_STREAM configured");
+            format!("{}::request", cargo_pkg_name)
         });
 
         let response_stream = std::env::var("RESPONSE_STREAM").unwrap_or_else(|_| {
-            panic!("No RESPONSE_STREAM configured");
+            info!("No RESPONSE_STREAM configured");
+            format!("{}::response", cargo_pkg_name)
         });
 
-        let consumer_name = std::env::var("CONSUMER_NAME").unwrap_or_else(|_| {
-            env!("CARGO_PKG_NAME").to_string()
-        });
+        let consumer_name = std::env::var("CONSUMER_NAME").unwrap_or({ cargo_pkg_name });
 
         let nats_url = std::env::var("NATS_URL").unwrap_or_else(|_| {
-            panic!("No NATS_URL configured");
+            info!("No NATS_URL configured, using localhost:4222");
+            String::from("localhost:4222")
         });
 
         let max_messages = std::env::var("REQUEST_MAX_MESSAGES").unwrap_or_else(|_| {
@@ -46,7 +49,9 @@ impl Config {
             String::from("1000")
         });
 
-        let request_stream_max_messages = max_messages.parse().expect("Couldn't convert REQUEST_MAX_MESSAGES");
+        let request_stream_max_messages = max_messages
+            .parse()
+            .expect("Couldn't convert REQUEST_MAX_MESSAGES");
 
         Config {
             request_stream,

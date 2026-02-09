@@ -540,6 +540,7 @@ version = "0.1.0"
 dependencies = [
  "async-nats",
  "common",
+ "futures-util",
  "tokio",
  "tracing",
 ]
@@ -2011,6 +2012,8 @@ dependencies = [
  "async-nats",
  "bytes",
  "common",
+ "futures-util",
+ "rand 0.8.5",
  "tokio",
  "tracing",
 ]

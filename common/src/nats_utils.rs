@@ -1,43 +1,54 @@
-use async_nats::jetstream::{Context, Message};
+use async_nats::jetstream::Context;
 use async_nats::jetstream::consumer::Consumer;
 use async_nats::jetstream::context::CreateStreamError;
 use async_nats::jetstream::stream::{Config, ConsumerError, Stream};
-use futures_util::{StreamExt, TryStreamExt};
+use futures_util::StreamExt;
+use futures_util::stream::Take;
 
 pub async fn create_consumer(
-        config: crate::config::Config,
-        process_message_func: fn(&Message)) -> Result<(), async_nats::Error> {
-    let client = async_nats::connect(config.nats_url).await?;
+    config: &crate::config::Config,
+) -> Result<Take<async_nats::jetstream::consumer::pull::Stream>, async_nats::Error> {
+    let client = async_nats::connect(&config.nats_url).await?;
     let jetstream = async_nats::jetstream::new(client);
 
-    let request_stream = get_stream(&jetstream,
-                                    config.request_stream.clone(),
-                                    config.request_stream_max_messages).await?;
+    let request_stream = get_stream(
+        &jetstream,
+        config.request_stream.clone(),
+        config.request_stream_max_messages,
+    )
+    .await?;
 
-    let consumer = create_pull_consumer(request_stream,
-                                        config.consumer_name,
-                                        config.request_stream).await?;
+    let consumer = create_pull_consumer(
+        request_stream,
+        config.consumer_name.clone(),
+        config.request_stream.clone(),
+    )
+    .await?;
 
-    let mut messages = consumer.messages().await?.take(100);
-    while let Ok(Some(message)) = messages.try_next().await {
-        process_message_func(&message);
-        message.ack().await?;
-        jetstream.publish(config.response_stream.clone(), "Confirm".into()).await?;
-    }
+    let messages = consumer.messages().await?.take(100);
 
-    Ok(())
+    Ok(messages)
 }
 
-pub async fn get_stream(jetstream: &Context, stream_name: String, stream_max_messages: i64) -> Result<Stream, CreateStreamError> {
+pub async fn get_stream(
+    jetstream: &Context,
+    stream_name: String,
+    stream_max_messages: i64,
+) -> Result<Stream, CreateStreamError> {
     jetstream
         .get_or_create_stream(Config {
             name: stream_name,
             max_messages: stream_max_messages,
             ..Default::default()
-        }).await
+        })
+        .await
 }
 
-pub async fn create_pull_consumer(request_stream: Stream, consumer_name: String, durable_name: String) -> Result<Consumer<async_nats::jetstream::consumer::pull::Config>, ConsumerError> {
+pub async fn create_pull_consumer(
+    request_stream: Stream,
+    consumer_name: String,
+    durable_name: String,
+) -> Result<Consumer<async_nats::jetstream::consumer::pull::Config>, ConsumerError> {
     request_stream
         .get_or_create_consumer(
             consumer_name.as_str(),
@@ -45,5 +56,6 @@ pub async fn create_pull_consumer(request_stream: Stream, consumer_name: String,
                 durable_name: Some(durable_name),
                 ..Default::default()
             },
-        ).await
+        )
+        .await
 }

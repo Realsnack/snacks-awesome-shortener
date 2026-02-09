@@ -9,3 +9,5 @@ common = { version = "0.1.0", path = "../common" }
 tokio = { version = "1.49.0", features = ["full"] }
 tracing = "0.1.44"
 bytes = "1.11.1"
+rand = "0.8.5"
+futures-util = "0.3.31"

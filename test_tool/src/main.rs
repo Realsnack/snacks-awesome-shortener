@@ -1,3 +1,4 @@
+use async_nats::HeaderMap;
 use async_nats::jetstream::Context;
 use clap::{Parser, Subcommand};
 use common::models::create_short_request::CreateShortRequest;
@@ -5,7 +6,6 @@ use common::models::persistence_request::PersistenceRequest;
 use common::models::short_url::ShortUrl;
 use common::setup_logging;
 use std::time::SystemTime;
-use async_nats::HeaderMap;
 use tracing::info;
 
 #[derive(Parser, Debug)]
@@ -61,7 +61,7 @@ async fn send_create_short_request(jetstream: Context) -> Result<(), async_nats:
         .publish_with_headers(
             "shorts_service::request",
             headers,
-            create_short_request.to_vec()?.into()
+            create_short_request.to_vec()?.into(),
         )
         .await?;
     jetstream.client().flush().await?;
