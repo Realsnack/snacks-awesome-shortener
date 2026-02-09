@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
 use crate::models::short_url::ShortUrl;
-use std::time::SystemTime;
 use mongodb::bson::DateTime;
+use serde::{Deserialize, Serialize};
+use std::time::SystemTime;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MongoShortUrl {

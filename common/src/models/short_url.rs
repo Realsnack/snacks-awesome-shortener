@@ -1,5 +1,5 @@
-use serde::{Serialize, Deserialize};
 use crate::models::mongo_short::MongoShortUrl;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ShortUrl {
@@ -13,7 +13,7 @@ impl ShortUrl {
         ShortUrl {
             short_url,
             long_url,
-            expiration
+            expiration,
         }
     }
 
@@ -21,7 +21,7 @@ impl ShortUrl {
         ShortUrl {
             short_url: mongo_short._id,
             long_url: mongo_short.long_url,
-            expiration: mongo_short.expiration
+            expiration: mongo_short.expiration,
         }
     }
 

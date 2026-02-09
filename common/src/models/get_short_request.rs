@@ -3,14 +3,14 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct GetShortRequest {
     pub request_time: u64,
-    pub short_url: String
+    pub short_url: String,
 }
 
 impl GetShortRequest {
     pub fn new(request_time: u64, short_url: String) -> GetShortRequest {
         GetShortRequest {
             request_time,
-            short_url
+            short_url,
         }
     }
 

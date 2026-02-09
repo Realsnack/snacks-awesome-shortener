@@ -1,7 +1,7 @@
 {
-    "crates/api_gateway": "0.1.0",
-    "crates/data_persistor": "0.1.0",
-    "crates/health_service": "0.1.0",
-    "crates/libs": "0.1.0",
-    "crates/shorts_service": "0.1.0"
-  }
+  "api_gateway": "0.1.0",
+  "data_persistor": "0.1.0",
+  "health_service": "0.1.0",
+  "libs": "0.1.0",
+  "shorts_service": "0.1.0"
+}

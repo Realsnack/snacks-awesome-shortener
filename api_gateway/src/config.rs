@@ -1,4 +1,4 @@
-use tracing::{debug};
+use tracing::debug;
 
 #[derive(Debug)]
 pub struct Config {

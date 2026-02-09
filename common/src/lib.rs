@@ -1,5 +1,5 @@
-pub mod models;
 pub mod config;
+pub mod models;
 pub mod nats_utils;
 
 pub fn setup_logging() {

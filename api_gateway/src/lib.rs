@@ -1,8 +1,8 @@
 use axum::Router;
+use config::Config;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 use tracing::{error, info};
-use config::Config;
 
 pub mod config;
 
@@ -15,8 +15,7 @@ pub async fn build_app(config: &Config) -> Router {
         NAME, VERSION, config.app_address, config.app_port
     );
 
-    Router::new()
-        .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
+    Router::new().layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
 }
 
 pub async fn run(app: Router, config: Config) {
