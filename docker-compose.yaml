@@ -1,0 +1,71 @@
+services:
+  nats:
+    image: nats:latest
+    container_name: nats
+    ports:
+      - "4222:4222"
+    restart: unless-stopped
+    command:
+      - "-js"
+      - "-sd"
+      - "/data/nats"
+
+  nats-ui:
+    image: ghcr.io/nats-nui/nui:latest
+    container_name: nats-ui
+    ports:
+      - "3333:31311"
+    restart: unless-stopped
+    volumes:
+      - nui-data:/db
+    depends_on:
+      - nats
+
+  api-gateway:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: api_gateway
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - nats
+      - data-persistor
+      - shorts-service
+
+  data-persistor:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: data_persistor
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - nats
+      - shorts-service
+
+  health-service:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: health_service
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - nats
+      - api-gateway
+      - data-persistor
+      - shorts-service
+
+  shorts-service:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: shorts_service
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - nats
+
+volumes:
+  nui-data:

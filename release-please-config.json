@@ -1,0 +1,11 @@
+{
+  "release-type": "rust",
+  "bump-minor-pre-major": true,
+  "packages": {
+    "crates/api_gateway": {},
+    "crates/data_persistor": {},
+    "crates/health_service": {},
+    "crates/libs": {},
+    "crates/shorts_service": {}
+  }
+}
