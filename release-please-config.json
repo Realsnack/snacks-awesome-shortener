@@ -1,11 +1,22 @@
 {
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "release-type": "rust",
-  "bump-minor-pre-major": true,
   "packages": {
-    "crates/api_gateway": {},
-    "crates/data_persistor": {},
-    "crates/health_service": {},
-    "crates/libs": {},
-    "crates/shorts_service": {}
+    "api_gateway": {
+      "path": "api_gateway"
+    },
+    "common": {
+      "path": "common"
+    },
+    "data_persistor": {
+      "path": "data_persistor"
+    },
+    "shorts_service": {
+      "path": "shorts_service"
+    },
+    "test_tool": {
+      "path": "test_tool"
+    }
   }
 }
+
