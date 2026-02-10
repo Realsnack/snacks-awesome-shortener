@@ -6,7 +6,7 @@ use futures_util::StreamExt;
 use futures_util::stream::Take;
 
 pub async fn create_consumer(
-    config: &crate::config::Config,
+    config: &crate::messaging_config::MessagingConfig,
 ) -> Result<Take<async_nats::jetstream::consumer::pull::Stream>, async_nats::Error> {
     let client = async_nats::connect(&config.nats_url).await?;
     let jetstream = async_nats::jetstream::new(client);

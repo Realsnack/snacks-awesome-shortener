@@ -1,7 +1,7 @@
 use tracing::{info, warn};
 
 #[derive(Debug)]
-pub struct Config {
+pub struct MessagingConfig {
     pub request_stream: String,
     pub response_stream: String,
     pub consumer_name: String,
@@ -9,15 +9,15 @@ pub struct Config {
     pub request_stream_max_messages: i64,
 }
 
-impl Config {
+impl MessagingConfig {
     pub fn new(
         request_stream: String,
         response_stream: String,
         consumer_name: String,
         nats_url: String,
         request_stream_max_messages: i64,
-    ) -> Config {
-        Config {
+    ) -> MessagingConfig {
+        MessagingConfig {
             request_stream,
             response_stream,
             consumer_name,
@@ -26,7 +26,7 @@ impl Config {
         }
     }
 
-    pub fn from_env(cargo_pkg_name: String) -> Config {
+    pub fn from_env(cargo_pkg_name: String) -> MessagingConfig {
         let request_stream = std::env::var("REQUEST_STREAM").unwrap_or_else(|_| {
             info!("No REQUEST_STREAM configured");
             format!("{}::request", cargo_pkg_name)
@@ -53,7 +53,7 @@ impl Config {
             .parse()
             .expect("Couldn't convert REQUEST_MAX_MESSAGES");
 
-        Config {
+        MessagingConfig {
             request_stream,
             response_stream,
             consumer_name,

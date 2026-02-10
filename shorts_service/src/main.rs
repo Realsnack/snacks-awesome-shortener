@@ -1,5 +1,5 @@
 use async_nats::jetstream::Message;
-use common::config::Config;
+use common::messaging_config::MessagingConfig;
 use common::models::create_short_request::CreateShortRequest;
 use common::models::get_short_request::GetShortRequest;
 use common::models::persistence_request::PersistenceRequest;
@@ -16,10 +16,10 @@ use tracing::{debug, error, info};
 #[tokio::main]
 async fn main() -> Result<(), async_nats::Error> {
     setup_logging();
-    let config = Config::from_env(env!("CARGO_PKG_NAME").to_string());
-    let mut consume_stream = create_consumer(&config).await?;
+    let config = MessagingConfig::from_env(env!("CARGO_PKG_NAME").to_string());
+    let mut consumer_stream = create_consumer(&config).await?;
 
-    while let Ok(Some(message)) = consume_stream.try_next().await {
+    while let Ok(Some(message)) = consumer_stream.try_next().await {
         process_message(&message, &config).await;
         message.ack().await?;
     }
@@ -27,7 +27,7 @@ async fn main() -> Result<(), async_nats::Error> {
     Ok(())
 }
 
-pub async fn process_message(message: &Message, config: &Config) {
+pub async fn process_message(message: &Message, config: &MessagingConfig) {
     debug!("Message payload: {:?}", &message);
     let message_type = match &message.headers {
         None => {
@@ -70,7 +70,7 @@ fn process_get_short(message: &bytes::Bytes) {
 
 async fn process_create_short(
     message: &bytes::Bytes,
-    config: &Config,
+    config: &MessagingConfig,
 ) -> Result<(), async_nats::Error> {
     let decoded_payload = CreateShortRequest::from_bytes(message)?;
     info!("message received: {:?}", decoded_payload);
@@ -108,7 +108,7 @@ async fn process_create_short(
 }
 
 pub async fn publish_jetstream_message(
-    config: Config,
+    config: MessagingConfig,
     message: Vec<u8>,
 ) -> Result<(), async_nats::Error> {
     let client = async_nats::connect(config.nats_url).await?;

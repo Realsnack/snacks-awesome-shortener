@@ -81,6 +81,7 @@ dependencies = [
  "async-nats",
  "axum",
  "common",
+ "futures-util",
  "serde",
  "serde_json",
  "tokio",

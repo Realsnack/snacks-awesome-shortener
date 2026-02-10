@@ -1,4 +1,4 @@
-pub mod config;
+pub mod messaging_config;
 pub mod models;
 pub mod nats_utils;
 
