@@ -9,7 +9,7 @@ use common::setup_logging;
 use futures_util::TryStreamExt;
 use rand::rngs::ThreadRng;
 use rand::seq::IteratorRandom;
-use rand::thread_rng;
+use rand::rng;
 use std::time::SystemTime;
 use tracing::{debug, error, info};
 
@@ -76,7 +76,7 @@ async fn process_create_short(
     info!("message received: {:?}", decoded_payload);
 
     let short = {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         ShortUrl::new(
             generate_short(&mut rng),
             decoded_payload.long_url.clone(),
