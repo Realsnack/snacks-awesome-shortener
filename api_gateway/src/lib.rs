@@ -1,14 +1,18 @@
+use crate::routes::root_routes::root_routes;
 use async_nats::jetstream::Message;
 use axum::Router;
-use futures_util::TryStreamExt;
 use common::messaging_config::MessagingConfig;
 use common::nats_utils::create_consumer;
 use config::Config;
+use futures_util::TryStreamExt;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 use tracing::{debug, error, info};
 
 pub mod config;
+pub mod handlers;
+pub mod routes;
+pub mod services;
 
 pub async fn build_app(config: &Config) -> Router {
     const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -19,7 +23,9 @@ pub async fn build_app(config: &Config) -> Router {
         NAME, VERSION, config.app_address, config.app_port
     );
 
-    Router::new().layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
+    Router::new()
+        .merge(root_routes())
+        .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
 }
 
 pub async fn run(app: Router, config: Config) {
