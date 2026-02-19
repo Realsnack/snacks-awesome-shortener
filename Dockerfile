@@ -13,8 +13,8 @@ COPY common/src common/src
 COPY data_persistor/Cargo.toml data_persistor/Cargo.toml
 COPY data_persistor/src data_persistor/src
 
-COPY health_service/Cargo.toml health_service/Cargo.toml
-COPY health_service/src health_service/src
+#COPY health_service/Cargo.toml health_service/Cargo.toml
+#COPY health_service/src health_service/src
 
 COPY shorts_service/Cargo.toml shorts_service/Cargo.toml
 COPY shorts_service/src shorts_service/src

@@ -28,13 +28,15 @@ impl MessagingConfig {
 
     pub fn from_env(cargo_pkg_name: String) -> MessagingConfig {
         let request_stream = std::env::var("REQUEST_STREAM").unwrap_or_else(|_| {
-            info!("No REQUEST_STREAM configured");
-            format!("{}::request", cargo_pkg_name)
+            let request_stream = format!("{}::request", cargo_pkg_name);
+            info!("No REQUEST_STREAM configured, using '{}'", request_stream);
+            request_stream
         });
 
         let response_stream = std::env::var("RESPONSE_STREAM").unwrap_or_else(|_| {
-            info!("No RESPONSE_STREAM configured");
-            format!("{}::response", cargo_pkg_name)
+            let response_stream = format!("{}::response", cargo_pkg_name);
+            info!("No RESPONSE_STREAM configured, using '{}'", response_stream);
+            response_stream
         });
 
         let consumer_name = std::env::var("CONSUMER_NAME").unwrap_or(cargo_pkg_name);
@@ -45,7 +47,7 @@ impl MessagingConfig {
         });
 
         let max_messages = std::env::var("REQUEST_MAX_MESSAGES").unwrap_or_else(|_| {
-            warn!("No REQUEST_MAX_MESSAGES configured - using 1000 as default");
+            warn!("No REQUEST_MAX_MESSAGES configured, using 1000 as default");
             String::from("1000")
         });
 

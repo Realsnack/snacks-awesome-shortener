@@ -28,6 +28,12 @@ services:
         SERVICE_NAME: api_gateway
       dockerfile: Dockerfile
     restart: always
+    environment:
+      RUST_LOG: INFO
+      NATS_URL: nats:4222
+      REQUESTS_MAX_MESSAGES: 1000
+      SAS_IP: 0.0.0.0
+      SAS_PORT: 8080
     depends_on:
       - nats
       - data-persistor
@@ -40,22 +46,30 @@ services:
         SERVICE_NAME: data_persistor
       dockerfile: Dockerfile
     restart: always
+    environment:
+      RUST_LOG: INFO
+      NATS_URL: nats:4222
+      REQUESTS_MAX_MESSAGES: 1000
     depends_on:
       - nats
       - shorts-service
 
-  health-service:
-    build:
-      context: .
-      args:
-        SERVICE_NAME: health_service
-      dockerfile: Dockerfile
-    restart: always
-    depends_on:
-      - nats
-      - api-gateway
-      - data-persistor
-      - shorts-service
+#  health-service:
+#    build:
+#      context: .
+#      args:
+#        SERVICE_NAME: health_service
+#      dockerfile: Dockerfile
+#    restart: always
+#    environment:
+#      RUST_LOG: INFO
+#      NATS_URL: nats:4222
+#      REQUESTS_MAX_MESSAGES: 1000
+#    depends_on:
+#      - nats
+#      - api-gateway
+#      - data-persistor
+#      - shorts-service
 
   shorts-service:
     build:
@@ -64,6 +78,10 @@ services:
         SERVICE_NAME: shorts_service
       dockerfile: Dockerfile
     restart: always
+    environment:
+      RUST_LOG: INFO
+      NATS_URL: nats:4222
+      REQUESTS_MAX_MESSAGES: 1000
     depends_on:
       - nats
 
