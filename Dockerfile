@@ -35,4 +35,5 @@ RUN cp target/release/${SERVICE_NAME} /app/app
 FROM bitnami/minideb:latest AS runtime
 WORKDIR /app
 COPY --from=builder /app/app /usr/local/bin/app
+ENV RUST_LOG=info
 ENTRYPOINT ["/usr/local/bin/app"]
