@@ -61,7 +61,7 @@ push_image() {
 
 main() {
   local _services=()
-  local _push_only=fale
+  local _push_only=false
   local _dont_push=false
   while [[ $# -gt 0 ]]; do
     case "$1" in
