@@ -1,3 +1,71 @@
+--- # nats
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nats
+  namespace: sas
+spec:
+  selector:
+    matchLabels:
+      app: nats
+  serviceName: nats
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container:  nats
+      labels:
+        app: nats
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: nats
+        image: nats:latest
+        args:
+          - "-js"
+          - "-sd"
+          - "/data/nats"
+        volumeMounts:
+        - name: nats-data
+          mountPath: /data/nats
+  volumeClaimTemplates:
+  - metadata:
+      name: nats-data 
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      storageClassName: "local-path"
+      resources:
+        requests:
+          storage: 1Gi
+--- # nats service
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats
+  namespace: sas
+spec:
+  clusterIP: None
+  selector:
+    app: nats
+  ports:
+    - port: 4222
+      name: client
+--- # nats external service
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats-external
+  namespace: sas
+spec:
+  type: NodePort
+  selector:
+    app: nats
+  ports:
+    - port: 4222
+      targetPort: 4222
+      nodePort: 30222
+      name: client
 --- # api_gateway
 apiVersion: apps/v1
 kind: Deployment
@@ -17,7 +85,7 @@ spec:
       containers:
         - name: api-gateway
           image: registry.msvacina.cz/sas-api_gateway:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
@@ -26,7 +94,7 @@ spec:
             - name: SAS_PORT
               value: "8080"
             - name: NATS_URL
-              value: "192.168.1.211:4222"
+              value: "nats-0.nats:4222"
             - name: REQUESTS_MAX_MESSAGES
               value: "1000"
 
@@ -68,7 +136,7 @@ spec:
             - name: RUST_LOG
               value: "info"
             - name: NATS_URL
-              value: "192.168.1.211:4222"
+              value: "nats-0.nats:4222"
             - name: REQUESTS_MAX_MESSAGES
               value: "1000"
 
@@ -96,6 +164,6 @@ spec:
             - name: RUST_LOG
               value: "info"
             - name: NATS_URL
-              value: "192.168.1.211:4222"
+              value: "nats-0.nats:4222"
             - name: REQUESTS_MAX_MESSAGES
               value: "1000"
