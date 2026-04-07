@@ -66,7 +66,7 @@ main() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
       -s|--service)
-        while [[ ! "$2" = "-*" ]] && [ -n "$2" ]; do
+        while [[ ! "$2" =~ -.* ]] && [ -n "$2" ]; do
           _services+=("$2")
           shift
         done
