@@ -1,5 +1,7 @@
 use std::sync::Arc;
+use async_nats::jetstream::Message;
 use crate::routes::root_routes::root_routes;
+use crate::routes::short_routes::shorts_routes;
 use axum::Router;
 use dashmap::DashMap;
 use common::messaging_config::MessagingConfig;
@@ -18,7 +20,7 @@ pub mod routes;
 pub mod services;
 pub mod state;
 
-pub async fn build_app(config: &Config) -> Router {
+pub async fn build_app(config: &Config, state: AppState) -> Router {
     const VERSION: &str = env!("CARGO_PKG_VERSION");
     const NAME: &str = env!("CARGO_PKG_NAME");
 
@@ -28,14 +30,16 @@ pub async fn build_app(config: &Config) -> Router {
     );
 
     Router::new()
+        .merge(shorts_routes())
         .merge(root_routes())
         .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
+        .with_state(state)
 }
 
 pub async fn build_state(config: &MessagingConfig) -> AppState {
     let client = async_nats::connect(&config.nats_url).await.unwrap();
 
-    let pending_map: DashMap<String, oneshot::Sender<String>> = DashMap::new();
+    let pending_map: DashMap<String, oneshot::Sender<Message>> = DashMap::new();
     let pending = Arc::new(pending_map);
 
     AppState {
@@ -62,11 +66,18 @@ pub async fn run_consumer(consumer_config: MessagingConfig, state: AppState) -> 
     let jetstream = async_nats::jetstream::new(state.client);
     let stream = get_stream(&jetstream, consumer_config.response_stream.clone(), consumer_config.request_stream_max_messages).await?;
     let consumer = create_pull_consumer(stream, consumer_config.consumer_name, consumer_config.response_stream).await?;
-    let mut messages = consumer.messages().await?.take(1);
+    let mut messages = consumer.messages().await?.take(100);
 
     while let Ok(Some(message)) = messages.try_next().await {
-        debug!("Message payload: {:?}", &message.message);
+        debug!("Received message with payload: {:?}", &message.message);
         message.ack().await?;
+
+        let correlation_id = message.headers.as_ref().unwrap().get("correlation_id").unwrap().as_str().to_string();
+        info!("Received response with id '{}'", correlation_id.clone());
+
+        if let Some((_, sender)) = state.pending.remove(&correlation_id) {
+            let _ = sender.send(message);
+        }
     }
 
     Ok(())

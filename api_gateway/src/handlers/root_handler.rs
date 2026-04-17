@@ -1,7 +1,7 @@
 pub async fn handle_root_get() -> String {
     const VERSION: &str = env!("CARGO_PKG_VERSION");
     const NAME: &str = env!("CARGO_PKG_NAME");
-    let hostname = std::env::var("HOSTNAME").unwrap();
+    let hostname = std::env::var("HOSTNAME").unwrap_or("unknown".into());
 
     format!(
         r#"{{"application_name": "{}","version": "{}","hostname":"{}"}}"#,

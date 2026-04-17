@@ -7,6 +7,7 @@ use common::models::short_url::ShortUrl;
 use common::setup_logging;
 use std::time::SystemTime;
 use tracing::info;
+use common::models::created_short_response::CreatedShortResponse;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -19,6 +20,7 @@ struct Args {
 enum Commands {
     SendPersistenceRequest,
     SendCreateShortRequest,
+    SendShortCreatedResponse
 }
 
 async fn setup_jetstream(nats_url: &str) -> Result<Context, async_nats::Error> {
@@ -69,6 +71,26 @@ async fn send_create_short_request(jetstream: Context) -> Result<(), async_nats:
     Ok(())
 }
 
+async fn send_short_created_response(jetstream: Context) -> Result<(), async_nats::Error> {
+    let short = ShortUrl::new("short_url".into(), "some_long_url".into(), 1);
+    let created_short = CreatedShortResponse::new(short, "test_tool".into());
+    let mut headers = HeaderMap::new();
+    headers.insert("message_type", "CreatedShortResponse");
+    headers.insert("correlation_id", "test-tool");
+
+    info!("Publishing message: {:?}", created_short);
+    jetstream
+        .publish_with_headers(
+            "api_gateway::response",
+            headers,
+            created_short.to_vec()?.into(),
+        )
+        .await?;
+    jetstream.client().flush().await?;
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), async_nats::Error> {
     setup_logging();
@@ -80,6 +102,7 @@ async fn main() -> Result<(), async_nats::Error> {
     match args.command {
         Commands::SendPersistenceRequest => send_persistence_request(jetstream).await?,
         Commands::SendCreateShortRequest => send_create_short_request(jetstream).await?,
+        Commands::SendShortCreatedResponse => send_short_created_response(jetstream).await?,
     };
 
     Ok(())

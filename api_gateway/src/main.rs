@@ -10,9 +10,9 @@ async fn main() {
     let consumer_config = MessagingConfig::from_env(env!("CARGO_PKG_NAME").to_string());
 
     let state = build_state(&consumer_config).await;
-    let app = build_app(&api_config).await;
+    let app = build_app(&api_config, state.clone()).await;
 
-    let consumer_task = tokio::spawn(run_consumer(consumer_config, state.clone()));
+    let consumer_task = tokio::spawn(run_consumer(consumer_config, state));
     let api_task = tokio::spawn(run(app, api_config));
 
     let _ = tokio::try_join!(api_task, consumer_task);
