@@ -6,8 +6,11 @@ use common::models::persistence_request::PersistenceRequest;
 use common::models::short_url::ShortUrl;
 use common::setup_logging;
 use std::time::SystemTime;
+use futures_util::TryStreamExt;
 use tracing::info;
+use common::messaging_config::MessagingConfig;
 use common::models::created_short_response::CreatedShortResponse;
+use common::nats_utils::create_consumer;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -20,7 +23,8 @@ struct Args {
 enum Commands {
     SendPersistenceRequest,
     SendCreateShortRequest,
-    SendShortCreatedResponse
+    SendShortCreatedResponse,
+    ConsumeShortCreatedResponse,
 }
 
 async fn setup_jetstream(nats_url: &str) -> Result<Context, async_nats::Error> {
@@ -91,11 +95,29 @@ async fn send_short_created_response(jetstream: Context) -> Result<(), async_nat
     Ok(())
 }
 
+async fn consume_short_created_response(nats_url: String) -> Result<(), async_nats::Error> {
+    let config = MessagingConfig::new(
+        "".to_string(),
+        "short_service::response".to_string(),
+        "test-tool".to_string(),
+        nats_url,
+        10000
+    );
+    let mut consumer_stream = create_consumer(&config).await?;
+
+    while let Ok(Some(message)) = consumer_stream.try_next().await {
+        info!("Received message {:?}", message);
+    }
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), async_nats::Error> {
     setup_logging();
     let args = Args::parse();
-    let jetstream = setup_jetstream("localhost:4222").await?;
+    let nats_url = "localhost:4222";
+    let jetstream = setup_jetstream(nats_url).await?;
 
     info!("Action chosen {:?}", args.command);
 
@@ -103,6 +125,7 @@ async fn main() -> Result<(), async_nats::Error> {
         Commands::SendPersistenceRequest => send_persistence_request(jetstream).await?,
         Commands::SendCreateShortRequest => send_create_short_request(jetstream).await?,
         Commands::SendShortCreatedResponse => send_short_created_response(jetstream).await?,
+        Commands::ConsumeShortCreatedResponse => consume_short_created_response(nats_url.to_string()).await?,
     };
 
     Ok(())
