@@ -2,14 +2,14 @@ use serde::{Deserialize, Serialize};
 use crate::models::short_url::ShortUrl;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct CreatedShortResponse {
+pub struct ShortCreatedEvent {
     pub short: ShortUrl,
     pub instance_id: String,
 }
 
-impl CreatedShortResponse {
-    pub fn new(short: ShortUrl, instance_id: String) -> CreatedShortResponse {
-        CreatedShortResponse {
+impl ShortCreatedEvent {
+    pub fn new(short: ShortUrl, instance_id: String) -> ShortCreatedEvent {
+        ShortCreatedEvent {
             short,
             instance_id
         }
@@ -21,7 +21,7 @@ impl CreatedShortResponse {
 
     pub fn from_bytes(
         request_bytes: &[u8],
-    ) -> Result<CreatedShortResponse, rmp_serde::decode::Error> {
+    ) -> Result<ShortCreatedEvent, rmp_serde::decode::Error> {
         rmp_serde::from_slice(request_bytes)
     }
 }
