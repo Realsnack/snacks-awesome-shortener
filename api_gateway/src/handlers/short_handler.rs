@@ -15,7 +15,7 @@ use uuid::Uuid;
 pub async fn handle_short_post(
     State(state): State<AppState>,
     headers: axum::http::header::HeaderMap,
-    Json(short_request): Json<CreateShortCommand>, // Replace with better model
+    Json(short_request): Json<CreateShortRequest>, // Replace with better model
 ) -> Response {
     debug!("Short request: '{:?}'", short_request);
 
@@ -28,6 +28,7 @@ pub async fn handle_short_post(
     let (tx, rx) = oneshot::channel();
     state.pending.insert(correlation_id.clone(), tx);
 
+    let short_command: CreateShortCommand = short_request.into();
     let mut nats_headers = async_nats::HeaderMap::new();
     nats_headers.insert("correlation_id", correlation_id.clone());
     nats_headers.insert("message_type", "CreateShortRequest");
@@ -41,7 +42,7 @@ pub async fn handle_short_post(
         .publish_with_headers(
             "shorts_service::request",
             nats_headers,
-            short_request.to_vec().unwrap().into(),
+            short_command.to_vec().unwrap().into(),
         )
         .await;
 
