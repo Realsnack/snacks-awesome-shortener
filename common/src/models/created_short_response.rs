@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use crate::models::persistence_request::PersistenceRequest;
 use crate::models::short_url::ShortUrl;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
