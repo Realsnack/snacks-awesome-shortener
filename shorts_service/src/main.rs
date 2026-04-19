@@ -1,8 +1,6 @@
 use async_nats::jetstream::Message;
 use common::messaging_config::MessagingConfig;
-use common::models::create_short_request::CreateShortRequest;
-use common::models::get_short_request::GetShortRequest;
-use common::models::persistence_request::PersistenceRequest;
+use common::models::messaging::{CreateShortCommand, PersistShortCommand, RetrieveShortCommand};
 use common::models::short_url::ShortUrl;
 use common::nats_utils::create_consumer;
 use common::setup_logging;
@@ -64,7 +62,7 @@ pub async fn process_message(message: &Message, config: &MessagingConfig) {
 }
 
 fn process_get_short(message: &bytes::Bytes) {
-    let decoded_payload = GetShortRequest::from_bytes(message).unwrap();
+    let decoded_payload = RetrieveShortCommand::from_bytes(message).unwrap();
     info!("message received: {:?}", decoded_payload);
 }
 
@@ -72,7 +70,7 @@ async fn process_create_short(
     message: &bytes::Bytes,
     config: &MessagingConfig,
 ) -> Result<(), async_nats::Error> {
-    let decoded_payload = CreateShortRequest::from_bytes(message)?;
+    let decoded_payload = CreateShortCommand::from_bytes(message)?;
     info!("message received: {:?}", decoded_payload);
 
     let short = {
@@ -91,7 +89,7 @@ async fn process_create_short(
     let client = async_nats::connect(&config.nats_url).await?;
     let jetstream = async_nats::jetstream::new(client);
 
-    let persistence_request = PersistenceRequest::new(
+    let persistence_request = PersistShortCommand::new(
         short,
         SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)?

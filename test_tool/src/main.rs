@@ -1,16 +1,14 @@
 use async_nats::HeaderMap;
 use async_nats::jetstream::Context;
 use clap::{Parser, Subcommand};
-use common::models::create_short_request::CreateShortRequest;
-use common::models::persistence_request::PersistenceRequest;
+use common::messaging_config::MessagingConfig;
+use common::models::messaging::{CreateShortCommand, PersistShortCommand, ShortCreatedEvent};
 use common::models::short_url::ShortUrl;
+use common::nats_utils::create_consumer;
 use common::setup_logging;
 use std::time::SystemTime;
 use futures_util::TryStreamExt;
 use tracing::info;
-use common::messaging_config::MessagingConfig;
-use common::models::created_short_response::CreatedShortResponse;
-use common::nats_utils::create_consumer;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -35,7 +33,7 @@ async fn setup_jetstream(nats_url: &str) -> Result<Context, async_nats::Error> {
 
 async fn send_persistence_request(jetstream: Context) -> Result<(), async_nats::Error> {
     let short_url = ShortUrl::new("asdfgh".to_string(), "https://hltv.org".to_string(), 600);
-    let data = PersistenceRequest::new(
+    let data = PersistShortCommand::new(
         short_url,
         SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)?
@@ -52,7 +50,7 @@ async fn send_persistence_request(jetstream: Context) -> Result<(), async_nats::
 }
 
 async fn send_create_short_request(jetstream: Context) -> Result<(), async_nats::Error> {
-    let create_short_request = CreateShortRequest::new(
+    let create_short_request = CreateShortCommand::new(
         SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)?
             .as_secs(),
@@ -77,7 +75,7 @@ async fn send_create_short_request(jetstream: Context) -> Result<(), async_nats:
 
 async fn send_short_created_response(jetstream: Context) -> Result<(), async_nats::Error> {
     let short = ShortUrl::new("short_url".into(), "some_long_url".into(), 1);
-    let created_short = CreatedShortResponse::new(short, "test_tool".into());
+    let created_short = ShortCreatedEvent::new(short, "test_tool".into());
     let mut headers = HeaderMap::new();
     headers.insert("message_type", "CreatedShortResponse");
     headers.insert("correlation_id", "test-tool");

@@ -4,18 +4,18 @@ use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use common::models::messaging::{CreateShortCommand, ShortCreatedEvent};
+use common::models::rest::CreateShortRequest;
 use serde_json::json;
-use common::models::create_short_request::CreateShortRequest;
 use tokio::sync::oneshot;
 use tracing::{debug, info, warn};
 use uuid;
 use uuid::Uuid;
-use common::models::created_short_response::CreatedShortResponse;
 
 pub async fn handle_short_post(
     State(state): State<AppState>,
     headers: axum::http::header::HeaderMap,
-    Json(short_request): Json<CreateShortRequest>, // Replace with better model
+    Json(short_request): Json<CreateShortCommand>, // Replace with better model
 ) -> Response {
     debug!("Short request: '{:?}'", short_request);
 
@@ -49,7 +49,7 @@ pub async fn handle_short_post(
         Ok(Ok(response)) => {
             debug!("Response headers: {:?}", response.headers);
             debug!("Response message: {:?}", response.message);
-            let created_short = CreatedShortResponse::from_bytes(&response.message.payload).unwrap();
+            let created_short = ShortCreatedEvent::from_bytes(&response.message.payload).unwrap();
             debug!("Created short: {:?}", created_short);
             Response::builder()
                 .status(StatusCode::OK)

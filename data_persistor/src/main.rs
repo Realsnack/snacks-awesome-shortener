@@ -1,6 +1,6 @@
 use async_nats::jetstream::Message;
 use common::messaging_config::MessagingConfig;
-use common::models::persistence_request::PersistenceRequest;
+use common::models::messaging::PersistShortCommand;
 use common::nats_utils::create_consumer;
 use common::setup_logging;
 use futures_util::TryStreamExt;
@@ -22,7 +22,7 @@ async fn main() -> Result<(), async_nats::Error> {
 
 pub async fn process_message(message: &Message) {
     debug!("Message payload: {:?}", &message.message);
-    let decoded_payload = PersistenceRequest::from_bytes(&message.message.payload);
+    let decoded_payload = PersistShortCommand::from_bytes(&message.message.payload);
     info!("message received: {:?}", decoded_payload);
 
     // TODO: Save into redis and db
