@@ -1,5 +1,5 @@
 use async_nats::jetstream::Context;
-use async_nats::jetstream::consumer::Consumer;
+use async_nats::jetstream::consumer::{Consumer, DeliverPolicy};
 use async_nats::jetstream::context::CreateStreamError;
 use async_nats::jetstream::stream::{Config, ConsumerError, Stream};
 use futures_util::StreamExt;
@@ -54,6 +54,7 @@ pub async fn create_pull_consumer(
             consumer_name.as_str(),
             async_nats::jetstream::consumer::pull::Config {
                 durable_name: Some(durable_name),
+                deliver_policy: DeliverPolicy::New,
                 ..Default::default()
             },
         )
