@@ -70,7 +70,7 @@ pub async fn run_consumer(consumer_config: MessagingConfig, state: AppState) -> 
     let consumer_name = format!("{}-{}", consumer_config.consumer_name, consumer_id);
     info!("Created NATS consumer with name {}", consumer_name);
     let consumer = create_pull_consumer(stream, consumer_name.clone(), consumer_name).await?;
-    let mut messages = consumer.messages().await?.take(100);
+    let mut messages = consumer.messages().await?;
 
     while let Ok(Some(message)) = messages.try_next().await {
         debug!("Received message with payload: {:?}", &message.message);
