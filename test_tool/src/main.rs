@@ -74,7 +74,7 @@ async fn send_create_short_request(jetstream: Context) -> Result<(), async_nats:
 }
 
 async fn send_short_created_response(jetstream: Context) -> Result<(), async_nats::Error> {
-    let short = ShortUrl::new("short_url".into(), "some_long_url".into(), 1);
+    let short = ShortUrl::new("/retcd".into(), "http://hltv.org/".into(), 86400);
     let created_short = ShortCreatedEvent::new(short, "test_tool".into());
     let mut headers = HeaderMap::new();
     headers.insert("message_type", "CreatedShortResponse");

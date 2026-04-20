@@ -12,6 +12,7 @@ use tokio::sync::oneshot;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 use tracing::{debug, error, info};
+use uuid::Uuid;
 use crate::state::AppState;
 
 pub mod config;
@@ -65,7 +66,10 @@ pub async fn run(app: Router, config: Config) {
 pub async fn run_consumer(consumer_config: MessagingConfig, state: AppState) -> Result<(), async_nats::Error> {
     let jetstream = async_nats::jetstream::new(state.client);
     let stream = get_stream(&jetstream, consumer_config.response_stream.clone(), consumer_config.request_stream_max_messages).await?;
-    let consumer = create_pull_consumer(stream, consumer_config.consumer_name, consumer_config.response_stream).await?;
+    let consumer_id = Uuid::new_v4();
+    let consumer_name = format!("{}-{}", consumer_config.consumer_name, consumer_id);
+    info!("Created NATS consumer with name {}", consumer_name);
+    let consumer = create_pull_consumer(stream, consumer_name.clone(), consumer_name).await?;
     let mut messages = consumer.messages().await?.take(100);
 
     while let Ok(Some(message)) = messages.try_next().await {

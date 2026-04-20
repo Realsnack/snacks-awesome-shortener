@@ -131,7 +131,7 @@ spec:
       containers:
         - name: data-persistor
           image: registry.msvacina.cz/sas-data_persistor:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           env:
             - name: RUST_LOG
               value: "info"
@@ -159,7 +159,7 @@ spec:
       containers:
         - name: shorts-service
           image: registry.msvacina.cz/sas-shorts_service:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           env:
             - name: RUST_LOG
               value: "info"
