@@ -7,7 +7,7 @@ use dashmap::DashMap;
 use common::messaging_config::MessagingConfig;
 use common::nats_utils::{create_pull_consumer, get_stream};
 use config::Config;
-use futures_util::{StreamExt, TryStreamExt};
+use futures_util::TryStreamExt;
 use tokio::sync::oneshot;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
