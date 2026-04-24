@@ -1,3 +1,4 @@
+use std::time::Duration;
 use async_nats::jetstream::Context;
 use async_nats::jetstream::consumer::{Consumer, DeliverPolicy};
 use async_nats::jetstream::context::CreateStreamError;
@@ -55,6 +56,7 @@ pub async fn create_pull_consumer(
             async_nats::jetstream::consumer::pull::Config {
                 durable_name: Some(durable_name),
                 deliver_policy: DeliverPolicy::New,
+                inactive_threshold: Duration::from_secs(3),
                 ..Default::default()
             },
         )
