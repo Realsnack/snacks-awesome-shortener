@@ -1,8 +1,5 @@
-use std::str::Bytes;
-
 use async_nats::jetstream::Message;
 use common::messaging_config::MessagingConfig;
-use common::models::messaging::PersistShortCommand;
 use common::nats_utils::create_consumer;
 use common::setup_logging;
 use futures_util::TryStreamExt;
@@ -52,4 +49,4 @@ pub async fn process_message(message: &Message) {
     }
 }
 
-pub async fn persist_short_command(message: &bytes::Bytes) {}
+pub async fn persist_short_command(_message: &bytes::Bytes) {}

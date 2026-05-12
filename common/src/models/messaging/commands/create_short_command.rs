@@ -6,11 +6,11 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub struct CreateShortCommand {
     pub request_time: u64,
     pub long_url: String,
-    pub expiration: usize,
+    pub expiration: u64,
 }
 
 impl CreateShortCommand {
-    pub fn new(request_time: u64, long_url: String, expiration: usize) -> CreateShortCommand {
+    pub fn new(request_time: u64, long_url: String, expiration: u64) -> CreateShortCommand {
         CreateShortCommand {
             request_time,
             long_url,
@@ -28,10 +28,11 @@ impl CreateShortCommand {
         rmp_serde::from_slice(request_bytes)
     }
 
+    /// Serializes the rust struct into protobuff message
     pub fn to_proto(&self) -> crate::proto::messaging::v1::CreateShortCommand {
         crate::proto::messaging::v1::CreateShortCommand {
-            request_time: 123,
-            long_url: String::from("https://hltv.org"),
+            request_time: self.request_time,
+            long_url: self.long_url.clone(),
             expiration: 456,
         }
     }
