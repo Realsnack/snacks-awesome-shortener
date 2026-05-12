@@ -1,6 +1,6 @@
-use std::time::{SystemTime, UNIX_EPOCH};
-use serde::{Deserialize, Serialize};
 use crate::models::rest::CreateShortRequest;
+use serde::{Deserialize, Serialize};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CreateShortCommand {
@@ -27,6 +27,14 @@ impl CreateShortCommand {
     ) -> Result<CreateShortCommand, rmp_serde::decode::Error> {
         rmp_serde::from_slice(request_bytes)
     }
+
+    pub fn to_proto(&self) -> crate::proto::messaging::v1::CreateShortCommand {
+        crate::proto::messaging::v1::CreateShortCommand {
+            request_time: 123,
+            long_url: String::from("https://hltv.org"),
+            expiration: 456,
+        }
+    }
 }
 
 impl From<CreateShortRequest> for CreateShortCommand {
@@ -34,7 +42,10 @@ impl From<CreateShortRequest> for CreateShortCommand {
         Self {
             expiration: create_short_request.expiration.unwrap_or(3600),
             long_url: create_short_request.long_url,
-            request_time: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+            request_time: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
         }
     }
 }

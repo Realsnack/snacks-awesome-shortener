@@ -6,9 +6,10 @@ use common::models::messaging::{CreateShortCommand, PersistShortCommand, ShortCr
 use common::models::short_url::ShortUrl;
 use common::nats_utils::create_consumer;
 use common::setup_logging;
-use std::time::SystemTime;
 use futures_util::TryStreamExt;
-use tracing::info;
+use prost::Message;
+use std::time::SystemTime;
+use tracing::{debug, info};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -21,6 +22,7 @@ struct Args {
 enum Commands {
     SendPersistenceRequest,
     SendCreateShortRequest,
+    SendCreateShortRequestProto,
     SendShortCreatedResponse,
     ConsumeShortCreatedResponse,
 }
@@ -73,6 +75,34 @@ async fn send_create_short_request(jetstream: Context) -> Result<(), async_nats:
     Ok(())
 }
 
+async fn send_create_short_request_proto(jetstream: Context) -> Result<(), async_nats::Error> {
+    let create_short_request = CreateShortCommand::new(
+        SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)?
+            .as_secs(),
+        "https://hltv.org/".into(),
+        3600,
+    );
+    let mut headers = HeaderMap::new();
+    headers.insert("message_type", "CreateShortRequest");
+
+    info!("Publishing message: {:?}", create_short_request.to_proto());
+    debug!(
+        "Publishing message: {:?}",
+        create_short_request.to_proto().encode_to_vec()
+    );
+    jetstream
+        .publish_with_headers(
+            "shorts_service::request",
+            headers,
+            create_short_request.to_proto().encode_to_vec().into(),
+        )
+        .await?;
+    jetstream.client().flush().await?;
+
+    Ok(())
+}
+
 async fn send_short_created_response(jetstream: Context) -> Result<(), async_nats::Error> {
     let short = ShortUrl::new("/retcd".into(), "http://hltv.org/".into(), 86400);
     let created_short = ShortCreatedEvent::new(short, "test_tool".into());
@@ -99,7 +129,7 @@ async fn consume_short_created_response(nats_url: String) -> Result<(), async_na
         "short_service::response".to_string(),
         "test-tool".to_string(),
         nats_url,
-        10000
+        10000,
     );
     let mut consumer_stream = create_consumer(&config).await?;
 
@@ -122,8 +152,11 @@ async fn main() -> Result<(), async_nats::Error> {
     match args.command {
         Commands::SendPersistenceRequest => send_persistence_request(jetstream).await?,
         Commands::SendCreateShortRequest => send_create_short_request(jetstream).await?,
+        Commands::SendCreateShortRequestProto => send_create_short_request_proto(jetstream).await?,
         Commands::SendShortCreatedResponse => send_short_created_response(jetstream).await?,
-        Commands::ConsumeShortCreatedResponse => consume_short_created_response(nats_url.to_string()).await?,
+        Commands::ConsumeShortCreatedResponse => {
+            consume_short_created_response(nats_url.to_string()).await?
+        }
     };
 
     Ok(())

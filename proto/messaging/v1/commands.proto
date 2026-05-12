@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package messaging.v1;
+
+import "common/v1/shorts.proto";
+
+message CreateShortCommand {
+  uint64 request_time = 1;
+  string long_url     = 2;
+  uint64 expiration   = 3;
+}
+
+message PersistShortCommand {
+  common.v1.ShortUrl short_url = 1;
+  uint64             created   = 2;
+}
+
+message RetrieveShortCommand {
+  uint64 request_time = 1;
+  string short_url    = 2;
+}
