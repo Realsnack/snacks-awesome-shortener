@@ -1,5 +1,7 @@
+//! Represents the configuration to connect to PostgreSQL database using sqlx
 use tracing::{info, warn};
 
+/// Simple datbase configuraion struct
 #[derive(Debug)]
 pub struct DbConfig {
     pub username: String,
@@ -26,6 +28,14 @@ impl DbConfig {
         }
     }
 
+    /// Function to fetch configuration form ENV variables
+    /// | Variable           | Description                              | Default   |
+    /// |--------------------|------------------------------------------|-----------|
+    /// | DB_USERNAME        | Username used to conenct to PostgreSQL   | sas_app   |
+    /// | DB_PASSWORD        | Password to connect to PostgreSQL        | sas_pass  |
+    /// | DB_HOST            | Hostname/DNS of the server to connect to | 127.0.0.1 |
+    /// | DB_NAME            | Postgres Database name                   | sas_db    |
+    /// | DB_MAX_CONNECTIONS | Maximum connections in pool              | 100       |
     pub fn from_env() -> DbConfig {
         let username = std::env::var("DB_USERNAME").unwrap_or_else(|_| {
             let username = String::from("sas_app");
