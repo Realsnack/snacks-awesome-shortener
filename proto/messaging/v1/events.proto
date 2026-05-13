@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package messaging.v1.events;
+
+import "common/v1/shorts.proto";
+
+message ShortCreatedEvent {
+  common.v1.ShortUrl short_url   = 1;
+  string             instance_id = 2;
+}

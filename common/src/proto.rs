@@ -1,6 +1,11 @@
 pub mod messaging {
     pub mod v1 {
-        include!(concat!(env!("OUT_DIR"), "/messaging.v1.rs"));
+        pub mod commands {
+            include!(concat!(env!("OUT_DIR"), "/messaging.v1.commands.rs"));
+        }
+        pub mod events {
+            include!(concat!(env!("OUT_DIR"), "/messaging.v1.commands.rs"));
+        }
     }
 }
 

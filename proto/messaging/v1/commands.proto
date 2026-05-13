@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package messaging.v1;
+package messaging.v1.commands;
 
 import "common/v1/shorts.proto";
 

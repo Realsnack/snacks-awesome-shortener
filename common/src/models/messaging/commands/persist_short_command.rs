@@ -21,4 +21,11 @@ impl PersistShortCommand {
     ) -> Result<PersistShortCommand, rmp_serde::decode::Error> {
         rmp_serde::from_slice(request_bytes)
     }
+
+    pub fn to_proto(&self) -> crate::proto::messaging::v1::commands::PersistShortCommand {
+        crate::proto::messaging::v1::commands::PersistShortCommand {
+            short_url: Some(self.short.to_proto()),
+            created: self.created,
+        }
+    }
 }

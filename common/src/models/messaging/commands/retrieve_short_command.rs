@@ -18,7 +18,16 @@ impl RetrieveShortCommand {
         rmp_serde::to_vec(&self)
     }
 
-    pub fn from_bytes(request_bytes: &[u8]) -> Result<RetrieveShortCommand, rmp_serde::decode::Error> {
+    pub fn from_bytes(
+        request_bytes: &[u8],
+    ) -> Result<RetrieveShortCommand, rmp_serde::decode::Error> {
         rmp_serde::from_slice(request_bytes)
+    }
+
+    pub fn to_proto(&self) -> crate::proto::messaging::v1::commands::RetrieveShortCommand {
+        crate::proto::messaging::v1::commands::RetrieveShortCommand {
+            request_time: self.request_time,
+            short_url: self.short_url.clone(),
+        }
     }
 }

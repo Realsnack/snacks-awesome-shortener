@@ -29,8 +29,8 @@ impl CreateShortCommand {
     }
 
     /// Serializes the rust struct into protobuff message
-    pub fn to_proto(&self) -> crate::proto::messaging::v1::CreateShortCommand {
-        crate::proto::messaging::v1::CreateShortCommand {
+    pub fn to_proto(&self) -> crate::proto::messaging::v1::commands::CreateShortCommand {
+        crate::proto::messaging::v1::commands::CreateShortCommand {
             request_time: self.request_time,
             long_url: self.long_url.clone(),
             expiration: 456,

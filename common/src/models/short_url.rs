@@ -19,4 +19,12 @@ impl ShortUrl {
     pub fn to_vec(&self) -> Result<Vec<u8>, rmp_serde::encode::Error> {
         rmp_serde::to_vec(&self)
     }
+
+    pub fn to_proto(&self) -> crate::proto::common::v1::ShortUrl {
+        crate::proto::common::v1::ShortUrl {
+            short_url: self.short_url.clone(),
+            long_url: self.long_url.clone(),
+            expiration: self.expiration,
+        }
+    }
 }
