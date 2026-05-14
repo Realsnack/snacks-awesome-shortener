@@ -1,5 +1,4 @@
 use crate::models::short_url::ShortUrl;
-use prost::Message;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -26,18 +25,6 @@ impl From<crate::proto::messaging::v1::events::ShortCreatedEvent> for ShortCreat
         Self {
             short: ShortUrl::from(value.short.unwrap()),
             instance_id: value.instance_id,
-        }
-    }
-}
-
-impl From<&[u8]> for ShortCreatedEvent {
-    fn from(value: &[u8]) -> Self {
-        let decoded_value =
-            crate::proto::messaging::v1::events::ShortCreatedEvent::decode(value).unwrap();
-
-        Self {
-            short: ShortUrl::from(decoded_value.short.unwrap()),
-            instance_id: decoded_value.instance_id,
         }
     }
 }
