@@ -20,6 +20,9 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+
       - name: Cache Cargo registry, git, and build
         uses: actions/cache@v4
         with:

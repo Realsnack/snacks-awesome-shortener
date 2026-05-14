@@ -14,11 +14,19 @@ impl RetrieveShortCommand {
         }
     }
 
-    pub fn to_vec(&self) -> Result<Vec<u8>, rmp_serde::encode::Error> {
-        rmp_serde::to_vec(&self)
+    pub fn to_proto(&self) -> crate::proto::messaging::v1::commands::RetrieveShortCommand {
+        crate::proto::messaging::v1::commands::RetrieveShortCommand {
+            request_time: self.request_time,
+            short_url: self.short_url.clone(),
+        }
     }
+}
 
-    pub fn from_bytes(request_bytes: &[u8]) -> Result<RetrieveShortCommand, rmp_serde::decode::Error> {
-        rmp_serde::from_slice(request_bytes)
+impl From<crate::proto::messaging::v1::commands::RetrieveShortCommand> for RetrieveShortCommand {
+    fn from(value: crate::proto::messaging::v1::commands::RetrieveShortCommand) -> Self {
+        Self {
+            request_time: value.request_time,
+            short_url: value.short_url,
+        }
     }
 }

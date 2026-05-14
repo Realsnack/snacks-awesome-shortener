@@ -3,6 +3,7 @@ pub mod messaging_config;
 pub mod models;
 pub mod nats_utils;
 pub mod pg_utils;
+pub mod proto;
 
 pub fn setup_logging() {
     if cfg!(debug_assertions) {

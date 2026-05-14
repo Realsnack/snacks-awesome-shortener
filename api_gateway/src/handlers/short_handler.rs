@@ -1,11 +1,12 @@
-use axum::body::Body;
 use crate::state::AppState;
 use axum::Json;
+use axum::body::Body;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use common::models::messaging::{CreateShortCommand, ShortCreatedEvent};
 use common::models::rest::CreateShortRequest;
+use prost::Message;
 use serde_json::json;
 use tokio::sync::oneshot;
 use tracing::{debug, info, warn};
@@ -42,7 +43,7 @@ pub async fn handle_short_post(
         .publish_with_headers(
             "shorts_service::request",
             nats_headers,
-            short_command.to_vec().unwrap().into(),
+            short_command.to_proto().encode_to_vec().into(),
         )
         .await;
 
@@ -50,7 +51,11 @@ pub async fn handle_short_post(
         Ok(Ok(response)) => {
             debug!("Response headers: {:?}", response.headers);
             debug!("Response message: {:?}", response.message);
-            let created_short = ShortCreatedEvent::from_bytes(&response.message.payload).unwrap();
+            let decoded_payload = common::proto::messaging::v1::events::ShortCreatedEvent::decode(
+                response.message.payload,
+            )
+            .unwrap();
+            let created_short = ShortCreatedEvent::from(decoded_payload);
             debug!("Created short: {:?}", created_short);
             Response::builder()
                 .status(StatusCode::OK)
@@ -62,5 +67,4 @@ pub async fn handle_short_post(
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }
-
 }

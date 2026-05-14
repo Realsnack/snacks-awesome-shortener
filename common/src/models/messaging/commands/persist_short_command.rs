@@ -12,13 +12,19 @@ impl PersistShortCommand {
         PersistShortCommand { short, created }
     }
 
-    pub fn to_vec(&self) -> Result<Vec<u8>, rmp_serde::encode::Error> {
-        rmp_serde::to_vec(&self)
+    pub fn to_proto(&self) -> crate::proto::messaging::v1::commands::PersistShortCommand {
+        crate::proto::messaging::v1::commands::PersistShortCommand {
+            short: Some(self.short.to_proto()),
+            created: self.created,
+        }
     }
+}
 
-    pub fn from_bytes(
-        request_bytes: &[u8],
-    ) -> Result<PersistShortCommand, rmp_serde::decode::Error> {
-        rmp_serde::from_slice(request_bytes)
+impl From<crate::proto::messaging::v1::commands::PersistShortCommand> for PersistShortCommand {
+    fn from(value: crate::proto::messaging::v1::commands::PersistShortCommand) -> Self {
+        Self {
+            short: ShortUrl::from(value.short.unwrap()),
+            created: value.created,
+        }
     }
 }
