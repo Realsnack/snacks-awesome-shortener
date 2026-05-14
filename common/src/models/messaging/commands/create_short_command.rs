@@ -18,22 +18,22 @@ impl CreateShortCommand {
         }
     }
 
-    pub fn to_vec(&self) -> Result<Vec<u8>, rmp_serde::encode::Error> {
-        rmp_serde::to_vec(&self)
-    }
-
-    pub fn from_bytes(
-        request_bytes: &[u8],
-    ) -> Result<CreateShortCommand, rmp_serde::decode::Error> {
-        rmp_serde::from_slice(request_bytes)
-    }
-
     /// Serializes the rust struct into protobuff message
     pub fn to_proto(&self) -> crate::proto::messaging::v1::commands::CreateShortCommand {
         crate::proto::messaging::v1::commands::CreateShortCommand {
             request_time: self.request_time,
             long_url: self.long_url.clone(),
             expiration: 456,
+        }
+    }
+}
+
+impl From<crate::proto::messaging::v1::commands::CreateShortCommand> for CreateShortCommand {
+    fn from(value: crate::proto::messaging::v1::commands::CreateShortCommand) -> Self {
+        Self {
+            request_time: value.request_time,
+            long_url: value.long_url,
+            expiration: value.expiration,
         }
     }
 }

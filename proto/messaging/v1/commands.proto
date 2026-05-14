@@ -11,8 +11,8 @@ message CreateShortCommand {
 }
 
 message PersistShortCommand {
-  common.v1.ShortUrl short_url = 1;
-  uint64             created   = 2;
+  common.v1.ShortUrl short   = 1;
+  uint64             created = 2;
 }
 
 message RetrieveShortCommand {

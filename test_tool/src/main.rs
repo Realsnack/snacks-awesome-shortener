@@ -44,7 +44,10 @@ async fn send_persistence_request(jetstream: Context) -> Result<(), async_nats::
 
     info!("Publishing message: {:?}", data);
     jetstream
-        .publish("data_persistor::request", data.to_vec()?.into())
+        .publish(
+            "data_persistor::request",
+            data.to_proto().encode_to_vec().into(),
+        )
         .await?;
     jetstream.client().flush().await?;
 
@@ -67,7 +70,7 @@ async fn send_create_short_request(jetstream: Context) -> Result<(), async_nats:
         .publish_with_headers(
             "shorts_service::request",
             headers,
-            create_short_request.to_vec()?.into(),
+            create_short_request.to_proto().encode_to_vec().into(),
         )
         .await?;
     jetstream.client().flush().await?;
@@ -115,7 +118,7 @@ async fn send_short_created_response(jetstream: Context) -> Result<(), async_nat
         .publish_with_headers(
             "api_gateway::response",
             headers,
-            created_short.to_vec()?.into(),
+            created_short.to_proto().encode_to_vec().into(),
         )
         .await?;
     jetstream.client().flush().await?;

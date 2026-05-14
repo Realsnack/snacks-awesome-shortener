@@ -49,4 +49,4 @@ pub async fn process_message(message: &Message) {
     }
 }
 
-pub async fn persist_short_command(_message: &bytes::Bytes) {}
+pub async fn persist_short_command(_message: &[u8]) {}

@@ -6,8 +6,10 @@ use common::models::messaging::{
 };
 use common::models::short_url::ShortUrl;
 use common::nats_utils::create_consumer;
+use common::proto::messaging::v1::commands as protoCommands;
 use common::setup_logging;
 use futures_util::TryStreamExt;
+use prost::Message as _;
 use rand::rng;
 use rand::rngs::ThreadRng;
 use rand::seq::IteratorRandom;
@@ -51,7 +53,7 @@ pub async fn process_message(message: &Message, config: &MessagingConfig) {
 
     match message_type {
         "GetShortRequest" => {
-            process_get_short(&message.message.payload);
+            process_get_short(&message.message.payload).unwrap();
         }
         "CreateShortRequest" => {
             process_create_short(
@@ -68,20 +70,27 @@ pub async fn process_message(message: &Message, config: &MessagingConfig) {
     }
 }
 
-fn process_get_short(message: &bytes::Bytes) {
-    let decoded_payload = RetrieveShortCommand::from_bytes(message).unwrap();
-    info!("message received: {:?}", decoded_payload);
+fn process_get_short(message: &[u8]) -> Result<(), async_nats::Error> {
+    let decoded_payload =
+        common::proto::messaging::v1::commands::RetrieveShortCommand::decode(message)?;
+    debug!("message received: {:?}", decoded_payload);
+    let converted_payload = RetrieveShortCommand::from(decoded_payload);
+    info!("Decoded message received: {:?}", converted_payload);
+
+    Ok(())
 }
 
 async fn process_create_short(
-    message: &bytes::Bytes,
+    message: &[u8],
     config: &MessagingConfig,
     header_map: HeaderMap,
 ) -> Result<(), async_nats::Error> {
-    let decoded_payload = CreateShortCommand::from_bytes(message)?;
+    let decoded_payload = protoCommands::CreateShortCommand::decode(message)?;
+    debug!("decoded payload: {:?}", decoded_payload);
+    let converted_payload = CreateShortCommand::from(decoded_payload);
     info!(
         "message received: {:?} with headers {:?}",
-        decoded_payload, header_map
+        converted_payload, header_map
     );
 
     let correlation_id = header_map.get("correlation_id").unwrap().to_string();
@@ -91,20 +100,22 @@ async fn process_create_short(
         let mut rng = rng();
         ShortUrl::new(
             generate_short(&mut rng),
-            decoded_payload.long_url.clone(),
-            decoded_payload.expiration,
+            converted_payload.long_url.clone(),
+            converted_payload.expiration,
         )
     };
     debug!(
         "For url: {} generated short: {:?}",
-        decoded_payload.long_url, short
+        converted_payload.long_url, short
     );
 
     let client = async_nats::connect(&config.nats_url).await?;
     let jetstream = async_nats::jetstream::new(client);
 
     let hostname = std::env::var("HOSTNAME").unwrap_or("unknown".into());
-    let created_short_event = ShortCreatedEvent::new(short.clone(), hostname).to_vec()?;
+    let created_short_event = ShortCreatedEvent::new(short.clone(), hostname)
+        .to_proto()
+        .encode_to_vec();
 
     let mut headers = HeaderMap::new();
     headers.insert("message_type", "CreatedShortResponse");
@@ -125,7 +136,8 @@ async fn process_create_short(
             .duration_since(SystemTime::UNIX_EPOCH)?
             .as_secs(),
     )
-    .to_vec()?;
+    .to_proto()
+    .encode_to_vec();
 
     jetstream
         .publish_with_headers(
@@ -139,20 +151,20 @@ async fn process_create_short(
     Ok(())
 }
 
-pub async fn publish_jetstream_message(
-    config: MessagingConfig,
-    message: Vec<u8>,
-) -> Result<(), async_nats::Error> {
-    let client = async_nats::connect(config.nats_url).await?;
-    let jetstream = async_nats::jetstream::new(client);
+// pub async fn publish_jetstream_message(
+//     config: MessagingConfig,
+//     message: Vec<u8>,
+// ) -> Result<(), async_nats::Error> {
+//     let client = async_nats::connect(config.nats_url).await?;
+//     let jetstream = async_nats::jetstream::new(client);
 
-    jetstream
-        .publish("data_persistor::request", message.into())
-        .await?;
-    jetstream.client().flush().await?;
+//     jetstream
+//         .publish("data_persistor::request", message.into())
+//         .await?;
+//     jetstream.client().flush().await?;
 
-    Ok(())
-}
+//     Ok(())
+// }
 
 fn generate_short(mut rng: &mut ThreadRng) -> String {
     const CHARS: &str = "abcdefghjklmnopqrtuvwxyzABCDEFGHJKLMNOPQRTUVWXYZ1234567890";
