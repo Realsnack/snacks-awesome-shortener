@@ -1,7 +1,7 @@
 {
-  "api_gateway": "0.1.0",
-  "data_persistor": "0.1.0",
-  "health_service": "0.1.0",
-  "libs": "0.1.0",
-  "shorts_service": "0.1.0"
+  "api_gateway": "1.0.0",
+  "data_persistor": "1.0.0",
+  "health_service": "1.0.0",
+  "libs": "1.0.0",
+  "shorts_service": "1.0.0"
 }
