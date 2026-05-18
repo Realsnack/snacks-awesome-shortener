@@ -2,12 +2,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct RetrieveShortCommand {
-    pub request_time: u64,
+    pub request_time: i64,
     pub short_url: String,
 }
 
 impl RetrieveShortCommand {
-    pub fn new(request_time: u64, short_url: String) -> RetrieveShortCommand {
+    pub fn new(request_time: i64, short_url: String) -> RetrieveShortCommand {
         RetrieveShortCommand {
             request_time,
             short_url,

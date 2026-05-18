@@ -29,13 +29,13 @@ impl DbConfig {
     }
 
     /// Function to fetch configuration form ENV variables
-    /// | Variable           | Description                              | Default   |
-    /// |--------------------|------------------------------------------|-----------|
-    /// | DB_USERNAME        | Username used to conenct to PostgreSQL   | sas_app   |
-    /// | DB_PASSWORD        | Password to connect to PostgreSQL        | sas_pass  |
-    /// | DB_HOST            | Hostname/DNS of the server to connect to | 127.0.0.1 |
-    /// | DB_NAME            | Postgres Database name                   | sas_db    |
-    /// | DB_MAX_CONNECTIONS | Maximum connections in pool              | 100       |
+    /// | Variable           | Description                              | Default        |
+    /// |--------------------|------------------------------------------|----------------|
+    /// | DB_USERNAME        | Username used to conenct to PostgreSQL   | sas_app        |
+    /// | DB_PASSWORD        | Password to connect to PostgreSQL        | sas_pass       |
+    /// | DB_HOST            | Hostname/DNS of the server to connect to | 127.0.0.1:5432 |
+    /// | DB_NAME            | Postgres Database name                   | sas_db         |
+    /// | DB_MAX_CONNECTIONS | Maximum connections in pool              | 100            |
     pub fn from_env() -> DbConfig {
         let username = std::env::var("DB_USERNAME").unwrap_or_else(|_| {
             let username = String::from("sas_app");
@@ -50,7 +50,7 @@ impl DbConfig {
         });
 
         let host = std::env::var("DB_HOST").unwrap_or_else(|_| {
-            let host = String::from("127.0.0.1");
+            let host = String::from("127.0.0.1:5432");
             warn!("No DB_HOST configured, using '{}'", host);
             host
         });
@@ -58,7 +58,7 @@ impl DbConfig {
         let database_name = std::env::var("DB_NAME").unwrap_or_else(|_| {
             let database_name = String::from("sas_db");
             info!("No DB_NAME configured, using '{}'", database_name);
-            String::from("localhost:4222")
+            database_name
         });
 
         let max_connections = std::env::var("DB_MAX_CONNECTIONS")

@@ -5,5 +5,5 @@ package common.v1;
 message ShortUrl {
   string short_url  = 1;
   string long_url   = 2;
-  uint64 expiration = 3;
+  int64  expiration = 3;
 }

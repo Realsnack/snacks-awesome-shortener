@@ -506,6 +506,8 @@ dependencies = [
  "bytes",
  "common",
  "futures-util",
+ "prost",
+ "sqlx",
  "tokio",
  "tracing",
 ]

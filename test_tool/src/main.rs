@@ -34,18 +34,23 @@ async fn setup_jetstream(nats_url: &str) -> Result<Context, async_nats::Error> {
 }
 
 async fn send_persistence_request(jetstream: Context) -> Result<(), async_nats::Error> {
-    let short_url = ShortUrl::new("asdfgh".to_string(), "https://hltv.org".to_string(), 600);
+    let short_url = ShortUrl::new("asdfgkh".to_string(), "https://hltv.org".to_string(), 600);
     let data = PersistShortCommand::new(
         short_url,
         SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)?
-            .as_secs(),
+            .as_secs()
+            .cast_signed(),
     );
+    let mut headers = HeaderMap::new();
+    headers.insert("message_type", "PersistShortCommand");
+    headers.insert("correlation_id", "test-tool");
 
     info!("Publishing message: {:?}", data);
     jetstream
-        .publish(
+        .publish_with_headers(
             "data_persistor::request",
+            headers,
             data.to_proto().encode_to_vec().into(),
         )
         .await?;
@@ -58,7 +63,8 @@ async fn send_create_short_request(jetstream: Context) -> Result<(), async_nats:
     let create_short_request = CreateShortCommand::new(
         SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)?
-            .as_secs(),
+            .as_secs()
+            .cast_signed(),
         "https://hltv.org/".into(),
         3600,
     );
@@ -82,7 +88,8 @@ async fn send_create_short_request_proto(jetstream: Context) -> Result<(), async
     let create_short_request = CreateShortCommand::new(
         SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)?
-            .as_secs(),
+            .as_secs()
+            .cast_signed(),
         "https://hltv.org/".into(),
         3600,
     );

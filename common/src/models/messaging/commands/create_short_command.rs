@@ -4,13 +4,13 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CreateShortCommand {
-    pub request_time: u64,
+    pub request_time: i64,
     pub long_url: String,
-    pub expiration: u64,
+    pub expiration: i64,
 }
 
 impl CreateShortCommand {
-    pub fn new(request_time: u64, long_url: String, expiration: u64) -> CreateShortCommand {
+    pub fn new(request_time: i64, long_url: String, expiration: i64) -> CreateShortCommand {
         CreateShortCommand {
             request_time,
             long_url,
@@ -46,7 +46,8 @@ impl From<CreateShortRequest> for CreateShortCommand {
             request_time: SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
-                .as_secs(),
+                .as_secs()
+                .cast_signed(),
         }
     }
 }

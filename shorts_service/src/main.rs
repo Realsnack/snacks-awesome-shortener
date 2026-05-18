@@ -134,7 +134,8 @@ async fn process_create_short(
         short,
         SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)?
-            .as_secs(),
+            .as_secs()
+            .cast_signed(),
     )
     .to_proto()
     .encode_to_vec();

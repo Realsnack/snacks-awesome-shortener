@@ -1,7 +1,7 @@
 CREATE TABLE shorts (
     short_url VARCHAR(8) PRIMARY KEY NOT NULL,
     long_url VARCHAR(1024) NOT NULL,
-    expiration integer NOT NULL,
+    expiration BIGINT NOT NULL,
     created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_used timestamp,
     use_counter integer NOT NULL default 0,

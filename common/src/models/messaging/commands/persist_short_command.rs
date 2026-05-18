@@ -3,12 +3,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct PersistShortCommand {
-    short: ShortUrl,
-    created: u64,
+    pub short: ShortUrl,
+    pub created: i64,
 }
 
 impl PersistShortCommand {
-    pub fn new(short: ShortUrl, created: u64) -> PersistShortCommand {
+    pub fn new(short: ShortUrl, created: i64) -> PersistShortCommand {
         PersistShortCommand { short, created }
     }
 
