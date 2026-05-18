@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n    INSERT INTO shorts(short_url, long_url, expiration, created)\n    VALUES ($1, $2, $3, to_timestamp($4));\n    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Int8",
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f00cd6d35aff0a944adbef0b3555e8a9c701bae9b482628929b9479d87d377f8"
+}
