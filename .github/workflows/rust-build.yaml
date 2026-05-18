@@ -9,6 +9,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  SQLX_OFFLINE: true
 
 jobs:
   build:
@@ -36,8 +37,6 @@ jobs:
 
       - name: Build
         run: RUSTFLAGS="--deny warnings" cargo build --verbose
-        env:
-          SQLX_OFFLINE: true
 
       - name: Run tests
         run: cargo test --jobs=$(nproc --all) --verbose
