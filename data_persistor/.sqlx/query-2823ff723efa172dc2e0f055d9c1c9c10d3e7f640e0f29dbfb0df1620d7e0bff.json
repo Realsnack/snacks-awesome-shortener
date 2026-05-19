@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM retrieve_short($1);",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "short_url",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "long_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "expiration",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "created",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "last_used",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "use_counter",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "is_expired",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "2823ff723efa172dc2e0f055d9c1c9c10d3e7f640e0f29dbfb0df1620d7e0bff"
+}
