@@ -1,5 +1,5 @@
 use async_nats::jetstream::Message;
-use common::models::messaging::PersistShortCommand;
+use common::models::messaging::{PersistShortCommand, RetrieveShortCommand};
 use common::nats_utils::create_consumer;
 use common::{db_config::DbConfig, messaging_config::MessagingConfig};
 use common::{pg_utils, setup_logging};
@@ -63,7 +63,6 @@ pub async fn persist_short_command(
     message: &[u8],
     db_pool: Pool<Postgres>,
 ) -> Result<(), sqlx::Error> {
-    // TODO: Decode message
     let decoded_payload =
         common::proto::messaging::v1::commands::PersistShortCommand::decode(message).unwrap();
     debug!("message received: {:?}", decoded_payload);
@@ -101,4 +100,27 @@ pub async fn persist_short_command(
             Ok(())
         }
     }
+}
+
+pub async fn retrieve_short_command(
+    message: &[u8],
+    db_pool: Pool<Postgres>,
+) -> Result<(), sqlx::Error> {
+    let decoded_payload =
+        common::proto::messaging::v1::commands::RetrieveShortCommand::decode(message).unwrap();
+    debug!("message received: {:?}", decoded_payload);
+    let converted_payload = RetrieveShortCommand::from(decoded_payload);
+    info!("Decoded message received: {:?}", converted_payload);
+    // TODO: Retrieve short from redis
+
+    // TODO: Retrieve short from postgres
+    let result = sqlx::query!(
+        r#"SELECT * FROM retrieve_short($1);"#,
+        converted_payload.short_url
+    )
+    .fetch_one(&db_pool)
+    .await?;
+    debug!("Db result: {:?}", result);
+
+    Ok(())
 }

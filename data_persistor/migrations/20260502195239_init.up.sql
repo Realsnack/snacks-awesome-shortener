@@ -28,20 +28,35 @@ ALTER FUNCTION mark_expired_rows()
     OWNER TO sas_app;
 
 CREATE FUNCTION retrieve_short(
-	short character varying)
-    RETURNS shorts
-    LANGUAGE 'sql'
-    COST 100
-    VOLATILE PARALLEL UNSAFE
+    short character varying
+)
+RETURNS TABLE (
+    short_url varchar,
+    long_url text,
+    expiration int,
+    created timestamptz,
+    last_used timestamptz,
+    use_counter int,
+    is_expired bool
+)
+LANGUAGE sql
 AS $BODY$
+
 UPDATE shorts
-SET last_used = NOW(), use_counter = use_counter + 1
-WHERE short_url = short
-	AND is_expired=false;
-SELECT *
-FROM shorts
-WHERE short_url = short
-	AND is_expired=false;
+SET
+    last_used = NOW(),
+    use_counter = use_counter + 1
+WHERE shorts.short_url = short
+    AND is_expired = false
+RETURNING
+    short_url,
+    long_url,
+    expiration,
+    created,
+    last_used,
+    use_counter,
+    is_expired;
+
 $BODY$;
 
 ALTER FUNCTION retrieve_short(character varying)

@@ -9,7 +9,7 @@ use common::setup_logging;
 use futures_util::TryStreamExt;
 use prost::Message;
 use std::time::SystemTime;
-use tracing::{debug, info};
+use tracing::info;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -20,9 +20,8 @@ struct Args {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    SendPersistenceRequest,
     SendCreateShortRequest,
-    SendCreateShortRequestProto,
+    SendPersistenceRequest,
     SendShortCreatedResponse,
     ConsumeShortCreatedResponse,
 }
@@ -84,35 +83,6 @@ async fn send_create_short_request(jetstream: Context) -> Result<(), async_nats:
     Ok(())
 }
 
-async fn send_create_short_request_proto(jetstream: Context) -> Result<(), async_nats::Error> {
-    let create_short_request = CreateShortCommand::new(
-        SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)?
-            .as_secs()
-            .cast_signed(),
-        "https://hltv.org/".into(),
-        3600,
-    );
-    let mut headers = HeaderMap::new();
-    headers.insert("message_type", "CreateShortRequest");
-
-    info!("Publishing message: {:?}", create_short_request.to_proto());
-    debug!(
-        "Publishing message: {:?}",
-        create_short_request.to_proto().encode_to_vec()
-    );
-    jetstream
-        .publish_with_headers(
-            "shorts_service::request",
-            headers,
-            create_short_request.to_proto().encode_to_vec().into(),
-        )
-        .await?;
-    jetstream.client().flush().await?;
-
-    Ok(())
-}
-
 async fn send_short_created_response(jetstream: Context) -> Result<(), async_nats::Error> {
     let short = ShortUrl::new("/retcd".into(), "http://hltv.org/".into(), 86400);
     let created_short = ShortCreatedEvent::new(short, "test_tool".into());
@@ -162,7 +132,6 @@ async fn main() -> Result<(), async_nats::Error> {
     match args.command {
         Commands::SendPersistenceRequest => send_persistence_request(jetstream).await?,
         Commands::SendCreateShortRequest => send_create_short_request(jetstream).await?,
-        Commands::SendCreateShortRequestProto => send_create_short_request_proto(jetstream).await?,
         Commands::SendShortCreatedResponse => send_short_created_response(jetstream).await?,
         Commands::ConsumeShortCreatedResponse => {
             consume_short_created_response(nats_url.to_string()).await?
