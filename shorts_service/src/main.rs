@@ -109,6 +109,7 @@ async fn process_create_short(
         converted_payload.long_url, short
     );
 
+    // FIXME: Create jetstream once in main and reuse it
     let client = async_nats::connect(&config.nats_url).await?;
     let jetstream = async_nats::jetstream::new(client);
 
@@ -151,21 +152,6 @@ async fn process_create_short(
 
     Ok(())
 }
-
-// pub async fn publish_jetstream_message(
-//     config: MessagingConfig,
-//     message: Vec<u8>,
-// ) -> Result<(), async_nats::Error> {
-//     let client = async_nats::connect(config.nats_url).await?;
-//     let jetstream = async_nats::jetstream::new(client);
-
-//     jetstream
-//         .publish("data_persistor::request", message.into())
-//         .await?;
-//     jetstream.client().flush().await?;
-
-//     Ok(())
-// }
 
 fn generate_short(mut rng: &mut ThreadRng) -> String {
     const CHARS: &str = "abcdefghjklmnopqrtuvwxyzABCDEFGHJKLMNOPQRTUVWXYZ1234567890";

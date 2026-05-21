@@ -1,12 +1,14 @@
-use async_nats::jetstream::Message;
-use common::models::messaging::{PersistShortCommand, RetrieveShortCommand};
+use async_nats::HeaderMap;
+use async_nats::jetstream::{self, Context, Message};
+use common::models::messaging::{PersistShortCommand, RetrieveShortCommand, ShortRetrievedEvent};
+use common::models::short_url::ShortUrl;
 use common::nats_utils::create_consumer;
 use common::{db_config::DbConfig, messaging_config::MessagingConfig};
 use common::{pg_utils, setup_logging};
 use futures_util::TryStreamExt;
 use prost::Message as _;
 use sqlx::{Pool, Postgres};
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 
 #[tokio::main]
 async fn main() -> Result<(), async_nats::Error> {
@@ -16,8 +18,11 @@ async fn main() -> Result<(), async_nats::Error> {
     let db_config = DbConfig::from_env();
     let db_pool = pg_utils::create_pool(db_config).await?;
 
+    let client = async_nats::connect(&config.nats_url).await?;
+    let jetstream = async_nats::jetstream::new(client);
+
     while let Ok(Some(message)) = consumer_stream.try_next().await {
-        process_message(&message, db_pool.clone()).await?;
+        process_message(&message, db_pool.clone(), jetstream.clone()).await?;
         message.ack().await?;
     }
 
@@ -27,9 +32,11 @@ async fn main() -> Result<(), async_nats::Error> {
 pub async fn process_message(
     message: &Message,
     db_pool: Pool<Postgres>,
+    jetstream: Context,
 ) -> Result<(), sqlx::Error> {
     debug!("Message payload: {:?}", &message.message);
 
+    // TODO: Create function get header value
     let message_type = match &message.headers {
         None => {
             error!("No headers in message: {:?}", &message);
@@ -46,11 +53,34 @@ pub async fn process_message(
             Some(message_type) => message_type.as_str(),
         },
     };
+    let correlation_id = match &message.headers {
+        None => {
+            error!("No headers in message: {:?}", &message);
+            String::from("none")
+        }
+        Some(headers) => match headers.get("correlation_id") {
+            None => {
+                warn!(
+                    "No 'correlation_id' header in message: {:?}",
+                    &message.message
+                );
+                String::from("none")
+            }
+            Some(message_type) => String::from(message_type.as_str()),
+        },
+    };
 
     info!("Received {} message", message_type);
 
     match message_type {
-        "PersistShortCommand" => persist_short_command(&message.message.payload, db_pool).await?,
+        "PersistShortCommand" => {
+            persist_short_command(&message.message.payload, correlation_id, db_pool, jetstream)
+                .await?
+        }
+        "RetrieveShortCommand" => {
+            retrieve_short_command(&message.message.payload, correlation_id, db_pool, jetstream)
+                .await?
+        }
         _ => {
             error!("Unsupported message type '{}'", message_type);
         }
@@ -61,7 +91,9 @@ pub async fn process_message(
 
 pub async fn persist_short_command(
     message: &[u8],
+    correlation_id: String,
     db_pool: Pool<Postgres>,
+    _jetstream: Context,
 ) -> Result<(), sqlx::Error> {
     let decoded_payload =
         common::proto::messaging::v1::commands::PersistShortCommand::decode(message).unwrap();
@@ -104,7 +136,9 @@ pub async fn persist_short_command(
 
 pub async fn retrieve_short_command(
     message: &[u8],
+    correlation_id: String,
     db_pool: Pool<Postgres>,
+    jetstream: Context,
 ) -> Result<(), sqlx::Error> {
     let decoded_payload =
         common::proto::messaging::v1::commands::RetrieveShortCommand::decode(message).unwrap();
@@ -121,6 +155,42 @@ pub async fn retrieve_short_command(
     .fetch_one(&db_pool)
     .await?;
     debug!("Db result: {:?}", result);
+
+    // FIXME: Move to shared function
+    let mut headers = HeaderMap::new();
+    headers.insert("message_type", "ShortRetrievedEvent");
+    headers.insert("correlation_id", correlation_id.to_string());
+
+    let retrieved_short = ShortUrl::new(
+        result.short_url.unwrap(),
+        result.long_url.unwrap(),
+        result.expiration.unwrap().into(),
+    );
+
+    let instance_id = std::env::var("HOSTNAME").unwrap_or("unknown".into());
+
+    debug!("Retrieved short: {:?}", retrieved_short);
+
+    let response = ShortRetrievedEvent::new(retrieved_short, instance_id);
+
+    match jetstream
+        .publish_with_headers(
+            "api_gateway::response",
+            headers,
+            response.to_proto().encode_to_vec().into(),
+        )
+        .await
+    {
+        Ok(_) => info!(
+            "Response sent successfully. correlation_id: {}",
+            correlation_id
+        ),
+        Err(e) => error!(
+            "Unable to send message. correlation_id: {}\n{}",
+            correlation_id, e
+        ),
+    };
+    jetstream.client().flush().await.unwrap();
 
     Ok(())
 }

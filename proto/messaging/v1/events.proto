@@ -8,3 +8,8 @@ message ShortCreatedEvent {
   common.v1.ShortUrl short       = 1;
   string             instance_id = 2;
 }
+
+message ShortRetrievedEvent {
+  common.v1.ShortUrl short       = 1;
+  string             instance_id = 2;
+}

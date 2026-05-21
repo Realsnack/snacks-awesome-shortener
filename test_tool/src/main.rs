@@ -2,7 +2,9 @@ use async_nats::HeaderMap;
 use async_nats::jetstream::Context;
 use clap::{Parser, Subcommand};
 use common::messaging_config::MessagingConfig;
-use common::models::messaging::{CreateShortCommand, PersistShortCommand, ShortCreatedEvent};
+use common::models::messaging::{
+    CreateShortCommand, PersistShortCommand, RetrieveShortCommand, ShortCreatedEvent,
+};
 use common::models::short_url::ShortUrl;
 use common::nats_utils::create_consumer;
 use common::setup_logging;
@@ -18,11 +20,13 @@ struct Args {
     pub command: Commands,
 }
 
+// FIXME: Update enum for proto Commands
 #[derive(Debug, Subcommand)]
 enum Commands {
     SendCreateShortRequest,
     SendPersistenceRequest,
     SendShortCreatedResponse,
+    SendRetrieveShortCommand,
     ConsumeShortCreatedResponse,
 }
 
@@ -43,6 +47,33 @@ async fn send_persistence_request(jetstream: Context) -> Result<(), async_nats::
     );
     let mut headers = HeaderMap::new();
     headers.insert("message_type", "PersistShortCommand");
+    headers.insert("correlation_id", "test-tool");
+
+    info!("Publishing message: {:?}", data);
+    jetstream
+        .publish_with_headers(
+            "data_persistor::request",
+            headers,
+            data.to_proto().encode_to_vec().into(),
+        )
+        .await?;
+    jetstream.client().flush().await?;
+
+    Ok(())
+}
+
+async fn send_retrieve_short_command(jetstream: Context) -> Result<(), async_nats::Error> {
+    let mut headers = HeaderMap::new();
+
+    let data = RetrieveShortCommand::new(
+        SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)?
+            .as_secs()
+            .cast_signed(),
+        String::from("1234"),
+    );
+
+    headers.insert("message_type", "RetrieveShortCommand");
     headers.insert("correlation_id", "test-tool");
 
     info!("Publishing message: {:?}", data);
@@ -133,6 +164,7 @@ async fn main() -> Result<(), async_nats::Error> {
         Commands::SendPersistenceRequest => send_persistence_request(jetstream).await?,
         Commands::SendCreateShortRequest => send_create_short_request(jetstream).await?,
         Commands::SendShortCreatedResponse => send_short_created_response(jetstream).await?,
+        Commands::SendRetrieveShortCommand => send_retrieve_short_command(jetstream).await?,
         Commands::ConsumeShortCreatedResponse => {
             consume_short_created_response(nats_url.to_string()).await?
         }
