@@ -1,5 +1,5 @@
 use async_nats::HeaderMap;
-use async_nats::jetstream::{self, Context, Message};
+use async_nats::jetstream::{Context, Message};
 use common::models::messaging::{PersistShortCommand, RetrieveShortCommand, ShortRetrievedEvent};
 use common::models::short_url::ShortUrl;
 use common::nats_utils::create_consumer;
@@ -91,7 +91,7 @@ pub async fn process_message(
 
 pub async fn persist_short_command(
     message: &[u8],
-    correlation_id: String,
+    _correlation_id: String,
     db_pool: Pool<Postgres>,
     _jetstream: Context,
 ) -> Result<(), sqlx::Error> {

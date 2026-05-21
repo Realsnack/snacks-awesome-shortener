@@ -1,9 +1,7 @@
 use async_nats::HeaderMap;
 use async_nats::jetstream::Message;
 use common::messaging_config::MessagingConfig;
-use common::models::messaging::{
-    CreateShortCommand, PersistShortCommand, RetrieveShortCommand, ShortCreatedEvent,
-};
+use common::models::messaging::{CreateShortCommand, PersistShortCommand, ShortCreatedEvent};
 use common::models::short_url::ShortUrl;
 use common::nats_utils::create_consumer;
 use common::proto::messaging::v1::commands as protoCommands;
@@ -52,9 +50,6 @@ pub async fn process_message(message: &Message, config: &MessagingConfig) {
     info!("Received {} message", message_type);
 
     match message_type {
-        "GetShortRequest" => {
-            process_get_short(&message.message.payload).unwrap();
-        }
         "CreateShortRequest" => {
             process_create_short(
                 &message.message.payload,
@@ -68,16 +63,6 @@ pub async fn process_message(message: &Message, config: &MessagingConfig) {
             error!("Unsupported message type '{}'", message_type);
         }
     }
-}
-
-fn process_get_short(message: &[u8]) -> Result<(), async_nats::Error> {
-    let decoded_payload =
-        common::proto::messaging::v1::commands::RetrieveShortCommand::decode(message)?;
-    debug!("message received: {:?}", decoded_payload);
-    let converted_payload = RetrieveShortCommand::from(decoded_payload);
-    info!("Decoded message received: {:?}", converted_payload);
-
-    Ok(())
 }
 
 async fn process_create_short(
