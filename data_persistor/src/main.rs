@@ -35,7 +35,6 @@ pub async fn process_message(
 ) -> Result<(), sqlx::Error> {
     debug!("Message payload: {:?}", &message.message);
 
-    // TODO: Create function get header value
     let message_type =
         get_header_value(&message.message.headers, "message_type").unwrap_or_else(|| "none");
     let correlation_id = get_header_value(&message.message.headers, "correlation_id")
