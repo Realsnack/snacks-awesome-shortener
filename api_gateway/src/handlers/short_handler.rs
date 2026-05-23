@@ -4,6 +4,7 @@ use axum::body::Body;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use common::TypeString;
 use common::models::messaging::{CreateShortCommand, ShortCreatedEvent};
 use common::models::rest::CreateShortRequest;
 use prost::Message;
@@ -32,7 +33,7 @@ pub async fn handle_short_post(
     let short_command: CreateShortCommand = short_request.into();
     let mut nats_headers = async_nats::HeaderMap::new();
     nats_headers.insert("correlation_id", correlation_id.clone());
-    nats_headers.insert("message_type", "CreateShortRequest");
+    nats_headers.insert("message_type", short_command.type_as_string());
     nats_headers.insert("response_subject", "api_gateway::response");
     info!(
         "Sending request with X-Correlation-Id '{}'",

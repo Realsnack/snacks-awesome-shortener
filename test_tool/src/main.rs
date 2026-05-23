@@ -7,11 +7,11 @@ use common::models::messaging::{
 };
 use common::models::short_url::ShortUrl;
 use common::nats_utils::create_consumer;
-use common::setup_logging;
+use common::{TypeString, setup_logging};
 use futures_util::TryStreamExt;
 use prost::Message;
 use std::time::SystemTime;
-use tracing::info;
+use tracing::{debug, info};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -46,7 +46,7 @@ async fn send_persistence_request(jetstream: Context) -> Result<(), async_nats::
             .cast_signed(),
     );
     let mut headers = HeaderMap::new();
-    headers.insert("message_type", "PersistShortCommand");
+    headers.insert("message_type", data.type_as_string());
     headers.insert("correlation_id", "test-tool");
 
     info!("Publishing message: {:?}", data);
@@ -73,8 +73,9 @@ async fn send_retrieve_short_command(jetstream: Context) -> Result<(), async_nat
         String::from("1234"),
     );
 
-    headers.insert("message_type", "RetrieveShortCommand");
+    headers.insert("message_type", data.type_as_string());
     headers.insert("correlation_id", "test-tool");
+    debug!("Headers set: {:?}", headers);
 
     info!("Publishing message: {:?}", data);
     jetstream
@@ -99,7 +100,7 @@ async fn send_create_short_request(jetstream: Context) -> Result<(), async_nats:
         3600,
     );
     let mut headers = HeaderMap::new();
-    headers.insert("message_type", "CreateShortRequest");
+    headers.insert("message_type", create_short_request.type_as_string());
 
     info!("Publishing message: {:?}", create_short_request);
     jetstream
@@ -118,7 +119,7 @@ async fn send_short_created_response(jetstream: Context) -> Result<(), async_nat
     let short = ShortUrl::new("/retcd".into(), "http://hltv.org/".into(), 86400);
     let created_short = ShortCreatedEvent::new(short, "test_tool".into());
     let mut headers = HeaderMap::new();
-    headers.insert("message_type", "CreatedShortResponse");
+    headers.insert("message_type", created_short.type_as_string());
     headers.insert("correlation_id", "test-tool");
 
     info!("Publishing message: {:?}", created_short);
