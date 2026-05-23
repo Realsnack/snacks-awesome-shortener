@@ -30,8 +30,7 @@ async fn main() -> Result<(), async_nats::Error> {
 
 pub async fn process_message(message: &Message, config: &MessagingConfig) {
     debug!("Message payload: {:?}", &message);
-    let message_type =
-        get_header_value(&message.message.headers, "message_type").unwrap_or_else(|| "none");
+    let message_type = get_header_value(&message.message.headers, "message_type").unwrap_or("none");
 
     info!("Received {} message", message_type);
 
