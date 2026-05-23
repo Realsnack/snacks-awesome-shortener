@@ -3,7 +3,7 @@ use async_nats::jetstream::Message;
 use common::messaging_config::MessagingConfig;
 use common::models::messaging::{CreateShortCommand, PersistShortCommand, ShortCreatedEvent};
 use common::models::short_url::ShortUrl;
-use common::nats_utils::create_consumer;
+use common::nats_utils::{create_common_headers, create_consumer, get_header_value};
 use common::proto::messaging::v1::commands as protoCommands;
 use common::setup_logging;
 use futures_util::TryStreamExt;
@@ -30,22 +30,8 @@ async fn main() -> Result<(), async_nats::Error> {
 
 pub async fn process_message(message: &Message, config: &MessagingConfig) {
     debug!("Message payload: {:?}", &message);
-    let message_type = match &message.headers {
-        None => {
-            error!("No headers in message: {:?}", &message);
-            "none"
-        }
-        Some(headers) => match headers.get("message_type") {
-            None => {
-                error!(
-                    "No 'message_type' header in message: {:?}",
-                    &message.message
-                );
-                "none"
-            }
-            Some(message_type) => message_type.as_str(),
-        },
-    };
+    let message_type =
+        get_header_value(&message.message.headers, "message_type").unwrap_or_else(|| "none");
 
     info!("Received {} message", message_type);
 
@@ -103,9 +89,8 @@ async fn process_create_short(
         .to_proto()
         .encode_to_vec();
 
-    let mut headers = HeaderMap::new();
-    headers.insert("message_type", "CreatedShortResponse");
-    headers.insert("correlation_id", correlation_id.to_string());
+    let headers =
+        create_common_headers(String::from("CreatedShortResponse"), correlation_id.clone());
 
     jetstream
         .publish_with_headers(
