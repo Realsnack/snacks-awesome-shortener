@@ -1,10 +1,12 @@
-use std::time::Duration;
+use async_nats::HeaderMap;
 use async_nats::jetstream::Context;
 use async_nats::jetstream::consumer::{Consumer, DeliverPolicy};
 use async_nats::jetstream::context::CreateStreamError;
 use async_nats::jetstream::stream::{Config, ConsumerError, Stream};
 use futures_util::StreamExt;
 use futures_util::stream::Take;
+use std::time::Duration;
+use tracing::{error, warn};
 
 pub async fn create_consumer(
     config: &crate::messaging_config::MessagingConfig,
@@ -61,4 +63,22 @@ pub async fn create_pull_consumer(
             },
         )
         .await
+}
+
+pub fn get_header_value<'a>(message_headers: &'a Option<HeaderMap>, key: &str) -> Option<&'a str> {
+    let headers = match message_headers {
+        Some(headers) => headers,
+        None => {
+            error!("No headers in message");
+            return None;
+        }
+    };
+
+    match headers.get(key) {
+        Some(value) => Some(value.as_str()),
+        None => {
+            warn!("Header '{}' not found in headers", key);
+            None
+        }
+    }
 }

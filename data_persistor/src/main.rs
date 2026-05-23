@@ -2,13 +2,13 @@ use async_nats::HeaderMap;
 use async_nats::jetstream::{Context, Message};
 use common::models::messaging::{PersistShortCommand, RetrieveShortCommand, ShortRetrievedEvent};
 use common::models::short_url::ShortUrl;
-use common::nats_utils::create_consumer;
+use common::nats_utils::{create_consumer, get_header_value};
 use common::{db_config::DbConfig, messaging_config::MessagingConfig};
 use common::{pg_utils, setup_logging};
 use futures_util::TryStreamExt;
 use prost::Message as _;
 use sqlx::{Pool, Postgres};
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, info};
 
 #[tokio::main]
 async fn main() -> Result<(), async_nats::Error> {
@@ -37,38 +37,11 @@ pub async fn process_message(
     debug!("Message payload: {:?}", &message.message);
 
     // TODO: Create function get header value
-    let message_type = match &message.headers {
-        None => {
-            error!("No headers in message: {:?}", &message);
-            "none"
-        }
-        Some(headers) => match headers.get("message_type") {
-            None => {
-                error!(
-                    "No 'message_type' header in message: {:?}",
-                    &message.message
-                );
-                "none"
-            }
-            Some(message_type) => message_type.as_str(),
-        },
-    };
-    let correlation_id = match &message.headers {
-        None => {
-            error!("No headers in message: {:?}", &message);
-            String::from("none")
-        }
-        Some(headers) => match headers.get("correlation_id") {
-            None => {
-                warn!(
-                    "No 'correlation_id' header in message: {:?}",
-                    &message.message
-                );
-                String::from("none")
-            }
-            Some(message_type) => String::from(message_type.as_str()),
-        },
-    };
+    let message_type =
+        get_header_value(&message.message.headers, "message_type").unwrap_or_else(|| "none");
+    let correlation_id = get_header_value(&message.message.headers, "correlation_id")
+        .unwrap_or_else(|| "hehehee")
+        .to_string();
 
     info!("Received {} message", message_type);
 
@@ -159,7 +132,7 @@ pub async fn retrieve_short_command(
     // FIXME: Move to shared function
     let mut headers = HeaderMap::new();
     headers.insert("message_type", "ShortRetrievedEvent");
-    headers.insert("correlation_id", correlation_id.to_string());
+    headers.insert("correlation_id", correlation_id.clone());
 
     let retrieved_short = ShortUrl::new(
         result.short_url.unwrap(),
