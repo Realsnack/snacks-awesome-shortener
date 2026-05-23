@@ -3,7 +3,7 @@ use async_nats::jetstream::Message;
 use common::messaging_config::MessagingConfig;
 use common::models::messaging::{CreateShortCommand, PersistShortCommand, ShortCreatedEvent};
 use common::models::short_url::ShortUrl;
-use common::nats_utils::{create_consumer, get_header_value};
+use common::nats_utils::{create_common_headers, create_consumer, get_header_value};
 use common::proto::messaging::v1::commands as protoCommands;
 use common::setup_logging;
 use futures_util::TryStreamExt;
@@ -89,9 +89,8 @@ async fn process_create_short(
         .to_proto()
         .encode_to_vec();
 
-    let mut headers = HeaderMap::new();
-    headers.insert("message_type", "CreatedShortResponse");
-    headers.insert("correlation_id", correlation_id.to_string());
+    let headers =
+        create_common_headers(String::from("CreatedShortResponse"), correlation_id.clone());
 
     jetstream
         .publish_with_headers(

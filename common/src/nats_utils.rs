@@ -82,3 +82,11 @@ pub fn get_header_value<'a>(message_headers: &'a Option<HeaderMap>, key: &str) -
         }
     }
 }
+
+pub fn create_common_headers(message_type: String, correlation_id: String) -> HeaderMap {
+    let mut headers = HeaderMap::new();
+    headers.insert("message_type", message_type);
+    headers.insert("correlation_id", correlation_id);
+
+    headers
+}

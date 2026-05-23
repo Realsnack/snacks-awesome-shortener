@@ -1,8 +1,7 @@
-use async_nats::HeaderMap;
 use async_nats::jetstream::{Context, Message};
 use common::models::messaging::{PersistShortCommand, RetrieveShortCommand, ShortRetrievedEvent};
 use common::models::short_url::ShortUrl;
-use common::nats_utils::{create_consumer, get_header_value};
+use common::nats_utils::{create_common_headers, create_consumer, get_header_value};
 use common::{db_config::DbConfig, messaging_config::MessagingConfig};
 use common::{pg_utils, setup_logging};
 use futures_util::TryStreamExt;
@@ -129,10 +128,8 @@ pub async fn retrieve_short_command(
     .await?;
     debug!("Db result: {:?}", result);
 
-    // FIXME: Move to shared function
-    let mut headers = HeaderMap::new();
-    headers.insert("message_type", "ShortRetrievedEvent");
-    headers.insert("correlation_id", correlation_id.clone());
+    let headers =
+        create_common_headers(String::from("ShortRetrievedEvent"), correlation_id.clone());
 
     let retrieved_short = ShortUrl::new(
         result.short_url.unwrap(),
