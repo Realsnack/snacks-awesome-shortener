@@ -1,14 +1,18 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+use proc_macro::TokenStream;
+use quote::quote;
+use syn::{DeriveInput, parse_macro_input};
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[proc_macro_derive(TypeString)]
+pub fn derive_type_to_string(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = input.ident;
+    let expanded = quote! {
+        impl TypeString for #name {
+            fn type_as_string(&self) -> String {
+                ::std::any::type_name_of_val(&self).split("::").last().unwrap().to_string()
+            }
+        }
+    };
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+    TokenStream::from(expanded)
 }

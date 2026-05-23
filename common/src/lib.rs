@@ -4,6 +4,8 @@ pub mod models;
 pub mod nats_utils;
 pub mod pg_utils;
 pub mod proto;
+pub mod traits;
+pub use traits::TypeString;
 
 pub fn setup_logging() {
     if cfg!(debug_assertions) {
