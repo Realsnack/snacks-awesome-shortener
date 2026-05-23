@@ -40,6 +40,9 @@ jobs:
         with:
           components: clippy
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+
       - name: Install clippy-sarif & sarif-fmt
         run: |
           if ! command -v clippy-sarif >/dev/null; then
