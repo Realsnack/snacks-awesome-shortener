@@ -35,14 +35,14 @@ pub async fn process_message(
 ) -> Result<(), sqlx::Error> {
     debug!("Message payload: {:?}", &message.message);
 
-    let message_type =
-        get_header_value(&message.message.headers, "message_type").unwrap_or_else(|| "none");
+    let message_type = get_header_value(&message.message.headers, "message_type").unwrap_or("none");
     let correlation_id = get_header_value(&message.message.headers, "correlation_id")
-        .unwrap_or_else(|| "hehehee")
+        .unwrap_or("hehehee")
         .to_string();
 
     info!("Received {} message", message_type);
 
+    // TODO: Fix this match string
     match message_type {
         "PersistShortCommand" => {
             persist_short_command(&message.message.payload, correlation_id, db_pool, jetstream)

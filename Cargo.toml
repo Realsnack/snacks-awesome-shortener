@@ -1,3 +1,3 @@
 [workspace]
 resolver = "3"
-members = ["api_gateway", "common", "common_derive", "data_persistor", "shorts_service", "test_tool"]
+members = ["api_gateway", "common", "common_derive", "common_derive", "data_persistor", "shorts_service", "test_tool"]

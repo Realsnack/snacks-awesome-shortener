@@ -1,8 +1,9 @@
+use crate::TypeString;
 use crate::models::rest::CreateShortRequest;
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TypeString)]
 pub struct CreateShortCommand {
     pub request_time: i64,
     pub long_url: String,
