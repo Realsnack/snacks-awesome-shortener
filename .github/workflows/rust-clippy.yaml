@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "main", "dev" ]
 
+env:
+  SQLX_OFFLINE: true
+
 jobs:
   rust-clippy-analyze:
     name: Run rust-clippy analysis
