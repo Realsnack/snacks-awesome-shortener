@@ -13,15 +13,14 @@ use tracing::{debug, error, info};
 async fn main() -> Result<(), async_nats::Error> {
     setup_logging();
     let config = MessagingConfig::from_env(env!("CARGO_PKG_NAME").to_string());
-    let mut consumer_stream = create_consumer(&config).await?;
+    let client = async_nats::connect(&config.nats_url).await?;
+    let jetstream = async_nats::jetstream::new(client);
+    let mut consumer_stream = create_consumer(&config, &jetstream).await?;
     let db_config = DbConfig::from_env();
     let db_pool = pg_utils::create_pool(db_config).await?;
 
-    let client = async_nats::connect(&config.nats_url).await?;
-    let jetstream = async_nats::jetstream::new(client);
-
     while let Ok(Some(message)) = consumer_stream.try_next().await {
-        process_message(&message, db_pool.clone(), jetstream.clone()).await?;
+        process_message(&message, db_pool.clone(), &jetstream).await?;
         message.ack().await?;
     }
 
@@ -31,7 +30,7 @@ async fn main() -> Result<(), async_nats::Error> {
 pub async fn process_message(
     message: &Message,
     db_pool: Pool<Postgres>,
-    jetstream: Context,
+    jetstream: &Context,
 ) -> Result<(), sqlx::Error> {
     debug!("Message payload: {:?}", &message.message);
 
@@ -42,7 +41,6 @@ pub async fn process_message(
 
     info!("Received {} message", message_type);
 
-    // TODO: Fix this match string
     match message_type {
         "PersistShortCommand" => {
             persist_short_command(&message.message.payload, correlation_id, db_pool, jetstream)
@@ -64,7 +62,7 @@ pub async fn persist_short_command(
     message: &[u8],
     _correlation_id: String,
     db_pool: Pool<Postgres>,
-    _jetstream: Context,
+    _jetstream: &Context,
 ) -> Result<(), sqlx::Error> {
     let decoded_payload =
         common::proto::messaging::v1::commands::PersistShortCommand::decode(message).unwrap();
@@ -109,7 +107,7 @@ pub async fn retrieve_short_command(
     message: &[u8],
     correlation_id: String,
     db_pool: Pool<Postgres>,
-    jetstream: Context,
+    jetstream: &Context,
 ) -> Result<(), sqlx::Error> {
     let decoded_payload =
         common::proto::messaging::v1::commands::RetrieveShortCommand::decode(message).unwrap();

@@ -8,14 +8,38 @@ use futures_util::stream::Take;
 use std::time::Duration;
 use tracing::{error, warn};
 
+// TODO: Remove
+// pub async fn create_consumer(
+//     config: &crate::messaging_config::MessagingConfig,
+// ) -> Result<Take<async_nats::jetstream::consumer::pull::Stream>, async_nats::Error> {
+//     let client = async_nats::connect(&config.nats_url).await?;
+//     let jetstream = async_nats::jetstream::new(client);
+
+//     let request_stream = get_stream(
+//         &jetstream,
+//         config.request_stream.clone(),
+//         config.request_stream_max_messages,
+//     )
+//     .await?;
+
+//     let consumer = create_pull_consumer(
+//         request_stream,
+//         config.consumer_name.clone(),
+//         config.request_stream.clone(),
+//     )
+//     .await?;
+
+//     let messages = consumer.messages().await?.take(100);
+
+//     Ok(messages)
+// }
+
 pub async fn create_consumer(
     config: &crate::messaging_config::MessagingConfig,
+    jetstream: &Context,
 ) -> Result<Take<async_nats::jetstream::consumer::pull::Stream>, async_nats::Error> {
-    let client = async_nats::connect(&config.nats_url).await?;
-    let jetstream = async_nats::jetstream::new(client);
-
     let request_stream = get_stream(
-        &jetstream,
+        jetstream,
         config.request_stream.clone(),
         config.request_stream_max_messages,
     )
