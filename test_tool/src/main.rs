@@ -1,4 +1,3 @@
-use async_nats::HeaderMap;
 use async_nats::jetstream::Context;
 use clap::{Parser, Subcommand};
 use common::messaging_config::MessagingConfig;
