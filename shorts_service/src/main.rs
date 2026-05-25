@@ -1,5 +1,5 @@
 use async_nats::HeaderMap;
-use async_nats::jetstream::Message;
+use async_nats::jetstream::{Context, Message};
 use common::messaging_config::MessagingConfig;
 use common::models::messaging::{CreateShortCommand, PersistShortCommand, ShortCreatedEvent};
 use common::models::short_url::ShortUrl;
@@ -18,17 +18,19 @@ use tracing::{debug, error, info};
 async fn main() -> Result<(), async_nats::Error> {
     setup_logging();
     let config = MessagingConfig::from_env(env!("CARGO_PKG_NAME").to_string());
-    let mut consumer_stream = create_consumer(&config).await?;
+    let client = async_nats::connect(&config.nats_url).await?;
+    let jetstream = async_nats::jetstream::new(client);
+    let mut consumer_stream = create_consumer(&config, &jetstream).await?;
 
     while let Ok(Some(message)) = consumer_stream.try_next().await {
-        process_message(&message, &config).await;
+        process_message(&message, &config, &jetstream).await;
         message.ack().await?;
     }
 
     Ok(())
 }
 
-pub async fn process_message(message: &Message, config: &MessagingConfig) {
+pub async fn process_message(message: &Message, config: &MessagingConfig, jetstream: &Context) {
     debug!("Message payload: {:?}", &message);
     let message_type = get_header_value(&message.message.headers, "message_type").unwrap_or("none");
 
@@ -40,6 +42,7 @@ pub async fn process_message(message: &Message, config: &MessagingConfig) {
                 &message.message.payload,
                 config,
                 message.message.headers.clone().unwrap(),
+                jetstream,
             )
             .await
             .unwrap();
@@ -52,8 +55,9 @@ pub async fn process_message(message: &Message, config: &MessagingConfig) {
 
 async fn process_create_short(
     message: &[u8],
-    config: &MessagingConfig,
+    _config: &MessagingConfig,
     header_map: HeaderMap,
+    jetstream: &Context,
 ) -> Result<(), async_nats::Error> {
     let decoded_payload = protoCommands::CreateShortCommand::decode(message)?;
     debug!("decoded payload: {:?}", decoded_payload);
@@ -78,10 +82,6 @@ async fn process_create_short(
         "For url: {} generated short: {:?}",
         converted_payload.long_url, short
     );
-
-    // FIXME: Create jetstream once in main and reuse it
-    let client = async_nats::connect(&config.nats_url).await?;
-    let jetstream = async_nats::jetstream::new(client);
 
     let hostname = std::env::var("HOSTNAME").unwrap_or("unknown".into());
     let created_short_event = ShortCreatedEvent::new(short.clone(), hostname)
