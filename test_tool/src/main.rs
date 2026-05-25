@@ -6,7 +6,7 @@ use common::models::messaging::{
     CreateShortCommand, PersistShortCommand, RetrieveShortCommand, ShortCreatedEvent,
 };
 use common::models::short_url::ShortUrl;
-use common::nats_utils::create_consumer;
+use common::nats_utils::{create_common_headers, create_consumer};
 use common::{TypeString, setup_logging};
 use futures_util::TryStreamExt;
 use prost::Message;
@@ -20,14 +20,15 @@ struct Args {
     pub command: Commands,
 }
 
-// FIXME: Update enum for proto Commands
+static CORRELATION_ID: &str = "test_tool";
+
 #[derive(Debug, Subcommand)]
 enum Commands {
-    SendCreateShortRequest,
-    SendPersistenceRequest,
-    SendShortCreatedResponse,
+    SendCreateShortCommand,
+    SendPersistShortCommand,
+    SendShortCreatedEvent,
     SendRetrieveShortCommand,
-    ConsumeShortCreatedResponse,
+    ConsumeShortCreatedEvent,
 }
 
 async fn setup_jetstream(nats_url: &str) -> Result<Context, async_nats::Error> {
@@ -36,7 +37,7 @@ async fn setup_jetstream(nats_url: &str) -> Result<Context, async_nats::Error> {
     Ok(async_nats::jetstream::new(client))
 }
 
-async fn send_persistence_request(jetstream: Context) -> Result<(), async_nats::Error> {
+async fn send_persist_short_command(jetstream: Context) -> Result<(), async_nats::Error> {
     let short_url = ShortUrl::new("asdfgkh".to_string(), "https://hltv.org".to_string(), 600);
     let data = PersistShortCommand::new(
         short_url,
@@ -45,9 +46,7 @@ async fn send_persistence_request(jetstream: Context) -> Result<(), async_nats::
             .as_secs()
             .cast_signed(),
     );
-    let mut headers = HeaderMap::new();
-    headers.insert("message_type", data.type_as_string());
-    headers.insert("correlation_id", "test-tool");
+    let headers = create_common_headers(data.type_as_string(), CORRELATION_ID.into());
 
     info!("Publishing message: {:?}", data);
     jetstream
@@ -63,8 +62,6 @@ async fn send_persistence_request(jetstream: Context) -> Result<(), async_nats::
 }
 
 async fn send_retrieve_short_command(jetstream: Context) -> Result<(), async_nats::Error> {
-    let mut headers = HeaderMap::new();
-
     let data = RetrieveShortCommand::new(
         SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)?
@@ -73,8 +70,7 @@ async fn send_retrieve_short_command(jetstream: Context) -> Result<(), async_nat
         String::from("1234"),
     );
 
-    headers.insert("message_type", data.type_as_string());
-    headers.insert("correlation_id", "test-tool");
+    let headers = create_common_headers(data.type_as_string(), CORRELATION_ID.into());
     debug!("Headers set: {:?}", headers);
 
     info!("Publishing message: {:?}", data);
@@ -90,7 +86,7 @@ async fn send_retrieve_short_command(jetstream: Context) -> Result<(), async_nat
     Ok(())
 }
 
-async fn send_create_short_request(jetstream: Context) -> Result<(), async_nats::Error> {
+async fn send_create_short_command(jetstream: Context) -> Result<(), async_nats::Error> {
     let create_short_request = CreateShortCommand::new(
         SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)?
@@ -99,8 +95,8 @@ async fn send_create_short_request(jetstream: Context) -> Result<(), async_nats:
         "https://hltv.org/".into(),
         3600,
     );
-    let mut headers = HeaderMap::new();
-    headers.insert("message_type", create_short_request.type_as_string());
+    let headers =
+        create_common_headers(create_short_request.type_as_string(), CORRELATION_ID.into());
 
     info!("Publishing message: {:?}", create_short_request);
     jetstream
@@ -115,12 +111,10 @@ async fn send_create_short_request(jetstream: Context) -> Result<(), async_nats:
     Ok(())
 }
 
-async fn send_short_created_response(jetstream: Context) -> Result<(), async_nats::Error> {
+async fn send_short_created_event(jetstream: Context) -> Result<(), async_nats::Error> {
     let short = ShortUrl::new("/retcd".into(), "http://hltv.org/".into(), 86400);
     let created_short = ShortCreatedEvent::new(short, "test_tool".into());
-    let mut headers = HeaderMap::new();
-    headers.insert("message_type", created_short.type_as_string());
-    headers.insert("correlation_id", "test-tool");
+    let headers = create_common_headers(created_short.type_as_string(), CORRELATION_ID.into());
 
     info!("Publishing message: {:?}", created_short);
     jetstream
@@ -135,7 +129,7 @@ async fn send_short_created_response(jetstream: Context) -> Result<(), async_nat
     Ok(())
 }
 
-async fn consume_short_created_response(nats_url: String) -> Result<(), async_nats::Error> {
+async fn consume_short_created_event(nats_url: String) -> Result<(), async_nats::Error> {
     let config = MessagingConfig::new(
         "".to_string(),
         "short_service::response".to_string(),
@@ -162,12 +156,12 @@ async fn main() -> Result<(), async_nats::Error> {
     info!("Action chosen {:?}", args.command);
 
     match args.command {
-        Commands::SendPersistenceRequest => send_persistence_request(jetstream).await?,
-        Commands::SendCreateShortRequest => send_create_short_request(jetstream).await?,
-        Commands::SendShortCreatedResponse => send_short_created_response(jetstream).await?,
+        Commands::SendPersistShortCommand => send_persist_short_command(jetstream).await?,
+        Commands::SendCreateShortCommand => send_create_short_command(jetstream).await?,
+        Commands::SendShortCreatedEvent => send_short_created_event(jetstream).await?,
         Commands::SendRetrieveShortCommand => send_retrieve_short_command(jetstream).await?,
-        Commands::ConsumeShortCreatedResponse => {
-            consume_short_created_response(nats_url.to_string()).await?
+        Commands::ConsumeShortCreatedEvent => {
+            consume_short_created_event(nats_url.to_string()).await?
         }
     };
 
