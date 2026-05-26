@@ -1,0 +1,12 @@
+[nats]
+url = "127.0.0.1:4222"
+input_stream = "data_persistor::request"
+consumer_name = "data_persistor"
+consumer_name_prefix = false
+
+[database]
+address = "127.0.0.1:5432"
+username = "sas_app"
+password = "temppass"
+name = "sas_db"
+max_connections = 100
