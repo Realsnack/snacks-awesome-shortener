@@ -4,7 +4,7 @@ version = "1.0.0"
 edition = "2024"
 
 [dependencies]
-async-nats = "0.48.0"
+async-nats = "0.49.0"
 axum = "0.8.8"
 common = { path = "../common" }
 dashmap = "6.1.0"
