@@ -15,4 +15,12 @@ impl Config {
             messaging_config,
         }
     }
+
+    pub fn get_messaging_config(&self) -> &MessagingConfig {
+        &self.messaging_config
+    }
+
+    pub fn get_database_config(&self) -> &DbConfig {
+        &self.db_config
+    }
 }

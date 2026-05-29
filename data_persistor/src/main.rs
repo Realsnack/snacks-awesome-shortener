@@ -1,5 +1,5 @@
 use async_nats::jetstream::{Context, Message};
-use common::config::{DbConfig, MessagingConfig};
+use common::Config;
 use common::models::messaging::{PersistShortCommand, RetrieveShortCommand, ShortRetrievedEvent};
 use common::models::short_url::ShortUrl;
 use common::nats_utils::{create_common_headers, create_consumer, get_header_value};
@@ -12,12 +12,11 @@ use tracing::{debug, error, info};
 #[tokio::main]
 async fn main() -> Result<(), async_nats::Error> {
     setup_logging();
-    let config = MessagingConfig::from_env(env!("CARGO_PKG_NAME").to_string());
-    let client = async_nats::connect(&config.nats_url).await?;
+    let config = Config::from_env(env!("CARGO_PKG_NAME").to_string());
+    let client = async_nats::connect(&config.get_messaging_config().nats_url).await?;
     let jetstream = async_nats::jetstream::new(client);
-    let mut consumer_stream = create_consumer(&config, &jetstream).await?;
-    let db_config = DbConfig::from_env();
-    let db_pool = pg_utils::create_pool(db_config).await?;
+    let mut consumer_stream = create_consumer(&config.get_messaging_config(), &jetstream).await?;
+    let db_pool = pg_utils::create_pool(config.get_database_config()).await?;
 
     while let Ok(Some(message)) = consumer_stream.try_next().await {
         process_message(&message, db_pool.clone(), &jetstream).await?;
@@ -116,7 +115,6 @@ pub async fn retrieve_short_command(
     info!("Decoded message received: {:?}", converted_payload);
     // TODO: Retrieve short from redis
 
-    // TODO: Retrieve short from postgres
     let result = sqlx::query!(
         r#"SELECT * FROM retrieve_short($1);"#,
         converted_payload.short_url
