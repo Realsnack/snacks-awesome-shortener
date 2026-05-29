@@ -1,10 +1,10 @@
-pub mod db_config;
-pub mod messaging_config;
+pub mod config;
 pub mod models;
 pub mod nats_utils;
 pub mod pg_utils;
 pub mod proto;
 pub mod traits;
+pub use config::Config;
 pub use traits::TypeString;
 
 pub fn setup_logging() {

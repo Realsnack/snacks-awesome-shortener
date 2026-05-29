@@ -35,7 +35,7 @@ use tracing::{error, warn};
 // }
 
 pub async fn create_consumer(
-    config: &crate::messaging_config::MessagingConfig,
+    config: &crate::config::MessagingConfig,
     jetstream: &Context,
 ) -> Result<Take<async_nats::jetstream::consumer::pull::Stream>, async_nats::Error> {
     let request_stream = get_stream(
