@@ -1,7 +1,7 @@
 use api_gateway::config::Config;
 use api_gateway::{build_app, build_state, run, run_consumer};
+use common::config::MessagingConfig;
 use common::setup_logging;
-use common::messaging_config::MessagingConfig;
 
 #[tokio::main]
 async fn main() {

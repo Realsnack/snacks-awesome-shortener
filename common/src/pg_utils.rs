@@ -1,6 +1,6 @@
 use sqlx::{self, Pool, Postgres, postgres::PgPoolOptions};
 
-use crate::db_config::DbConfig;
+use crate::config::DbConfig;
 
 pub async fn create_pool(db_config: DbConfig) -> Result<Pool<Postgres>, sqlx::Error> {
     let pool = PgPoolOptions::new()

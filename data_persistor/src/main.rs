@@ -1,8 +1,8 @@
 use async_nats::jetstream::{Context, Message};
+use common::config::{DbConfig, MessagingConfig};
 use common::models::messaging::{PersistShortCommand, RetrieveShortCommand, ShortRetrievedEvent};
 use common::models::short_url::ShortUrl;
 use common::nats_utils::{create_common_headers, create_consumer, get_header_value};
-use common::{db_config::DbConfig, messaging_config::MessagingConfig};
 use common::{pg_utils, setup_logging};
 use futures_util::TryStreamExt;
 use prost::Message as _;

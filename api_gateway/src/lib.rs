@@ -1,19 +1,19 @@
-use std::sync::Arc;
-use async_nats::jetstream::Message;
 use crate::routes::root_routes::root_routes;
 use crate::routes::short_routes::shorts_routes;
+use crate::state::AppState;
+use async_nats::jetstream::Message;
 use axum::Router;
-use dashmap::DashMap;
-use common::messaging_config::MessagingConfig;
+use common::config::MessagingConfig;
 use common::nats_utils::{create_pull_consumer, get_stream};
 use config::Config;
+use dashmap::DashMap;
 use futures_util::TryStreamExt;
+use std::sync::Arc;
 use tokio::sync::oneshot;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 use tracing::{debug, error, info};
 use uuid::Uuid;
-use crate::state::AppState;
 
 pub mod config;
 pub mod handlers;
@@ -43,10 +43,7 @@ pub async fn build_state(config: &MessagingConfig) -> AppState {
     let pending_map: DashMap<String, oneshot::Sender<Message>> = DashMap::new();
     let pending = Arc::new(pending_map);
 
-    AppState {
-        pending,
-        client,
-    }
+    AppState { pending, client }
 }
 
 pub async fn run(app: Router, config: Config) {
@@ -63,9 +60,17 @@ pub async fn run(app: Router, config: Config) {
     };
 }
 
-pub async fn run_consumer(consumer_config: MessagingConfig, state: AppState) -> Result<(), async_nats::Error> {
+pub async fn run_consumer(
+    consumer_config: MessagingConfig,
+    state: AppState,
+) -> Result<(), async_nats::Error> {
     let jetstream = async_nats::jetstream::new(state.client);
-    let stream = get_stream(&jetstream, consumer_config.response_stream.clone(), consumer_config.request_stream_max_messages).await?;
+    let stream = get_stream(
+        &jetstream,
+        consumer_config.response_stream.clone(),
+        consumer_config.request_stream_max_messages,
+    )
+    .await?;
     let consumer_id = Uuid::new_v4();
     let consumer_name = format!("{}-{}", consumer_config.consumer_name, consumer_id);
     info!("Created NATS consumer with name {}", consumer_name);
@@ -76,7 +81,14 @@ pub async fn run_consumer(consumer_config: MessagingConfig, state: AppState) -> 
         debug!("Received message with payload: {:?}", &message.message);
         message.ack().await?;
 
-        let correlation_id = message.headers.as_ref().unwrap().get("correlation_id").unwrap().as_str().to_string();
+        let correlation_id = message
+            .headers
+            .as_ref()
+            .unwrap()
+            .get("correlation_id")
+            .unwrap()
+            .as_str()
+            .to_string();
         info!("Received response with id '{}'", correlation_id.clone());
 
         if let Some((_, sender)) = state.pending.remove(&correlation_id) {
