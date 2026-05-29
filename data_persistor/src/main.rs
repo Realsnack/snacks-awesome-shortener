@@ -15,7 +15,7 @@ async fn main() -> Result<(), async_nats::Error> {
     let config = Config::from_env(env!("CARGO_PKG_NAME").to_string());
     let client = async_nats::connect(&config.get_messaging_config().nats_url).await?;
     let jetstream = async_nats::jetstream::new(client);
-    let mut consumer_stream = create_consumer(&config.get_messaging_config(), &jetstream).await?;
+    let mut consumer_stream = create_consumer(config.get_messaging_config(), &jetstream).await?;
     let db_pool = pg_utils::create_pool(config.get_database_config()).await?;
 
     while let Ok(Some(message)) = consumer_stream.try_next().await {
