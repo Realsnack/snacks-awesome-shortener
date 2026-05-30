@@ -33,11 +33,13 @@ services:
       NATS_URL: nats:4222
       REQUESTS_MAX_MESSAGES: 1000
       SAS_IP: 0.0.0.0
-      SAS_PORT: 8080
+      SAS_PORT: 9080
     depends_on:
       - nats
       - data-persistor
       - shorts-service
+    ports:
+      - "9080:9080"
 
   data-persistor:
     build:
@@ -50,6 +52,8 @@ services:
       RUST_LOG: INFO
       NATS_URL: nats:4222
       REQUESTS_MAX_MESSAGES: 1000
+      DB_HOST: postgres
+      DB_PASSWORD: temppass 
     depends_on:
       - nats
       - shorts-service

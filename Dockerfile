@@ -60,7 +60,7 @@ COPY --from=cacher /usr/local/cargo /usr/local/cargo
 COPY . .
 
 ARG SERVICE_NAME
-
+ENV SQLX_OFFLINE=true
 RUN cargo build \
     --release \
     -p ${SERVICE_NAME}
