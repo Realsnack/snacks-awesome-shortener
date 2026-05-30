@@ -99,7 +99,7 @@ pub async fn handle_short_get(
     match state
         .client
         .publish_with_headers(
-            "short_service::request",
+            "data_persistor::request",
             nats_headers,
             retrieve_short_command.to_proto().encode_to_vec().into(),
         )
@@ -161,7 +161,7 @@ pub async fn handle_short_redirect(
     match state
         .client
         .publish_with_headers(
-            "short_service::request",
+            "data_persistor::request",
             nats_headers,
             retrieve_short_command.to_proto().encode_to_vec().into(),
         )
