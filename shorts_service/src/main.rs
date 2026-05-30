@@ -37,7 +37,7 @@ pub async fn process_message(message: &Message, config: &MessagingConfig, jetstr
     info!("Received {} message", message_type);
 
     match message_type {
-        "CreateShortRequest" => {
+        "CreateShortCommand" => {
             process_create_short(
                 &message.message.payload,
                 config,
