@@ -142,10 +142,9 @@ pub async fn handle_short_get(
 }
 
 fn get_correlation_id_or_generate(headers: axum::http::HeaderMap) -> String {
-    let correlation_id = headers
+    headers
         .get("X-Correlation-Id")
         .and_then(|v| v.to_str().ok())
         .map(str::to_owned)
-        .unwrap_or_else(|| Uuid::new_v4().to_string());
-    correlation_id
+        .unwrap_or_else(|| Uuid::new_v4().to_string())
 }
