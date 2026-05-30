@@ -61,13 +61,7 @@ async fn send_persist_short_command(jetstream: Context) -> Result<(), async_nats
 }
 
 async fn send_retrieve_short_command(jetstream: Context) -> Result<(), async_nats::Error> {
-    let data = RetrieveShortCommand::new(
-        SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)?
-            .as_secs()
-            .cast_signed(),
-        String::from("1234"),
-    );
+    let data = RetrieveShortCommand::new(String::from("1234"));
 
     let headers = create_common_headers(data.type_as_string(), CORRELATION_ID.into());
     debug!("Headers set: {:?}", headers);
