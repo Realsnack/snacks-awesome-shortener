@@ -7,6 +7,7 @@ use axum::response::{IntoResponse, Response};
 use common::TypeString;
 use common::models::messaging::{CreateShortCommand, ShortCreatedEvent};
 use common::models::rest::CreateShortRequest;
+use common::nats_utils::create_common_headers;
 use prost::Message;
 use serde_json::json;
 use tokio::sync::oneshot;
@@ -21,37 +22,42 @@ pub async fn handle_short_post(
 ) -> Response {
     debug!("Short request: '{:?}'", short_request);
 
-    let correlation_id = headers
-        .get("X-Correlation-Id")
-        .and_then(|v| v.to_str().ok())
-        .map(str::to_owned)
-        .unwrap_or_else(|| Uuid::new_v4().to_string());
+    let correlation_id = get_correlation_id_or_generate(headers);
 
     let (tx, rx) = oneshot::channel();
     state.pending.insert(correlation_id.clone(), tx);
 
     let short_command: CreateShortCommand = short_request.into();
-    let mut nats_headers = async_nats::HeaderMap::new();
-    nats_headers.insert("correlation_id", correlation_id.clone());
-    nats_headers.insert("message_type", short_command.type_as_string());
+    let mut nats_headers =
+        create_common_headers(short_command.type_as_string(), correlation_id.clone());
     nats_headers.insert("response_subject", "api_gateway::response");
-    info!(
-        "Sending request with X-Correlation-Id '{}'",
-        correlation_id.clone()
-    );
-    let _client = state
+
+    match state
         .client
         .publish_with_headers(
             "shorts_service::request",
             nats_headers,
             short_command.to_proto().encode_to_vec().into(),
         )
-        .await;
+        .await
+    {
+        Ok(_) => info!(
+            "Sent {} with X-Correlation-Id '{}'",
+            short_command.type_as_string(),
+            correlation_id.clone()
+        ),
+        Err(e) => info!(
+            "Failed to send message {} with X-Correlation-Id '{}' due to error: {}",
+            short_command.type_as_string(),
+            correlation_id.clone(),
+            e
+        ),
+    };
 
     match tokio::time::timeout(std::time::Duration::from_secs(10), rx).await {
         Ok(Ok(response)) => {
-            debug!("Response headers: {:?}", response.headers);
-            debug!("Response message: {:?}", response.message);
+            debug!("Obtained response headers: {:?}", response.headers);
+            debug!("Obtained response message: {:?}", response.message);
             let decoded_payload = common::proto::messaging::v1::events::ShortCreatedEvent::decode(
                 response.message.payload,
             )
@@ -65,7 +71,16 @@ pub async fn handle_short_post(
         }
         _ => {
             warn!("Timed out waiting for response of '{}'", correlation_id);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            StatusCode::REQUEST_TIMEOUT.into_response()
         }
     }
+}
+
+fn get_correlation_id_or_generate(headers: axum::http::HeaderMap) -> String {
+    let correlation_id = headers
+        .get("X-Correlation-Id")
+        .and_then(|v| v.to_str().ok())
+        .map(str::to_owned)
+        .unwrap_or_else(|| Uuid::new_v4().to_string());
+    correlation_id
 }
