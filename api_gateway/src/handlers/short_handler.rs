@@ -191,7 +191,7 @@ pub async fn handle_short_redirect(
                 .unwrap();
             let retrieved_short_event = ShortRetrievedEvent::from(decoded_payload);
             debug!("Retrieved short: {:?}", retrieved_short_event);
-            Redirect::temporary(&retrieved_short_event.short.long_url.as_str()).into_response()
+            Redirect::temporary(retrieved_short_event.short.long_url.as_str()).into_response()
         }
         _ => {
             warn!("Timed out waiting for response of '{}'", correlation_id);
