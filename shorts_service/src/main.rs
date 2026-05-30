@@ -5,7 +5,7 @@ use common::models::messaging::{CreateShortCommand, PersistShortCommand, ShortCr
 use common::models::short_url::ShortUrl;
 use common::nats_utils::{create_common_headers, create_consumer, get_header_value};
 use common::proto::messaging::v1::commands as protoCommands;
-use common::setup_logging;
+use common::{TypeString, setup_logging};
 use futures_util::TryStreamExt;
 use prost::Message as _;
 use rand::rng;
@@ -84,18 +84,16 @@ async fn process_create_short(
     );
 
     let hostname = std::env::var("HOSTNAME").unwrap_or("unknown".into());
-    let created_short_event = ShortCreatedEvent::new(short.clone(), hostname)
-        .to_proto()
-        .encode_to_vec();
+    let created_short_event = ShortCreatedEvent::new(short.clone(), hostname);
 
     let headers =
-        create_common_headers(String::from("CreatedShortResponse"), correlation_id.clone());
+        create_common_headers(created_short_event.type_as_string(), correlation_id.clone());
 
     jetstream
         .publish_with_headers(
             response_subject,
-            headers.clone(),
-            created_short_event.into(),
+            headers,
+            created_short_event.to_proto().encode_to_vec().into(),
         )
         .await?;
     jetstream.client().flush().await?;
@@ -106,15 +104,16 @@ async fn process_create_short(
             .duration_since(SystemTime::UNIX_EPOCH)?
             .as_secs()
             .cast_signed(),
-    )
-    .to_proto()
-    .encode_to_vec();
+    );
+
+    let headers =
+        create_common_headers(persistence_request.type_as_string(), correlation_id.clone());
 
     jetstream
         .publish_with_headers(
             "data_persistor::request",
             headers,
-            persistence_request.into(),
+            persistence_request.to_proto().encode_to_vec().into(),
         )
         .await?;
     jetstream.client().flush().await?;
