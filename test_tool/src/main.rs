@@ -26,6 +26,7 @@ enum Commands {
     SendCreateShortCommand,
     SendPersistShortCommand,
     SendShortCreatedEvent,
+    SendShortRetrievedEvent,
     SendRetrieveShortCommand,
     ConsumeShortCreatedEvent,
 }
@@ -61,13 +62,7 @@ async fn send_persist_short_command(jetstream: Context) -> Result<(), async_nats
 }
 
 async fn send_retrieve_short_command(jetstream: Context) -> Result<(), async_nats::Error> {
-    let data = RetrieveShortCommand::new(
-        SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)?
-            .as_secs()
-            .cast_signed(),
-        String::from("1234"),
-    );
+    let data = RetrieveShortCommand::new(String::from("1234"));
 
     let headers = create_common_headers(data.type_as_string(), CORRELATION_ID.into());
     debug!("Headers set: {:?}", headers);
@@ -128,7 +123,25 @@ async fn send_short_created_event(jetstream: Context) -> Result<(), async_nats::
     Ok(())
 }
 
-async fn consume_short_created_event(jetstream: &Context) -> Result<(), async_nats::Error> {
+async fn send_retrieved_short_event(jetstream: Context) -> Result<(), async_nats::Error> {
+    let short = ShortUrl::new("/retcd".into(), "http://hltv.org/".into(), 86400);
+    let retreived_short = ShortCreatedEvent::new(short, "test_tool".into());
+    let headers = create_common_headers(retreived_short.type_as_string(), CORRELATION_ID.into());
+
+    info!("Publishing message: {:?}", retreived_short);
+    jetstream
+        .publish_with_headers(
+            "api_gateway::response",
+            headers,
+            retreived_short.to_proto().encode_to_vec().into(),
+        )
+        .await?;
+    jetstream.client().flush().await?;
+
+    Ok(())
+}
+
+async fn consume_short_created_event(jetstream: Context) -> Result<(), async_nats::Error> {
     let config = MessagingConfig::new(
         "".to_string(),
         "short_service::response".to_string(),
@@ -136,7 +149,7 @@ async fn consume_short_created_event(jetstream: &Context) -> Result<(), async_na
         "".into(),
         10000,
     );
-    let mut consumer_stream = create_consumer(&config, jetstream).await?;
+    let mut consumer_stream = create_consumer(&config, &jetstream).await?;
 
     while let Ok(Some(message)) = consumer_stream.try_next().await {
         info!("Received message {:?}", message);
@@ -159,7 +172,8 @@ async fn main() -> Result<(), async_nats::Error> {
         Commands::SendCreateShortCommand => send_create_short_command(jetstream).await?,
         Commands::SendShortCreatedEvent => send_short_created_event(jetstream).await?,
         Commands::SendRetrieveShortCommand => send_retrieve_short_command(jetstream).await?,
-        Commands::ConsumeShortCreatedEvent => consume_short_created_event(&jetstream).await?,
+        Commands::SendShortRetrievedEvent => send_retrieved_short_event(jetstream).await?,
+        Commands::ConsumeShortCreatedEvent => consume_short_created_event(jetstream).await?,
     };
 
     Ok(())

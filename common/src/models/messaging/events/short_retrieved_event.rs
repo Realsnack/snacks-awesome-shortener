@@ -1,7 +1,7 @@
 use crate::TypeString;
 use crate::models::short_url::ShortUrl;
 
-#[derive(TypeString)]
+#[derive(Debug, TypeString)]
 pub struct ShortRetrievedEvent {
     pub short: ShortUrl,
     pub instance_id: String,

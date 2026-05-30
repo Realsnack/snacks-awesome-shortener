@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use crate::TypeString;
 use serde::{Deserialize, Serialize};
 
@@ -8,9 +10,13 @@ pub struct RetrieveShortCommand {
 }
 
 impl RetrieveShortCommand {
-    pub fn new(request_time: i64, short_url: String) -> RetrieveShortCommand {
+    pub fn new(short_url: String) -> RetrieveShortCommand {
         RetrieveShortCommand {
-            request_time,
+            request_time: SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+                .cast_signed(),
             short_url,
         }
     }
