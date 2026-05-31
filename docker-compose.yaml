@@ -21,6 +21,25 @@ services:
     depends_on:
       - nats
 
+  postgres:
+    image: registry.msvacina.cz/postgresql:latest
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/bitnami/postgresql
+    environment:
+      POSTGRES_PASSWORD: postgrespwd
+    
+  postgres_init:
+    image: registry.msvacina.cz/sas_db_init:latest
+    container_name: sas_db_init
+    environment:
+      DATABASE_URL: postgres://postgres:postgrespwd@postgres:5432/postgres
+    depends_on:
+      - postgres
+
   api-gateway:
     build:
       context: .
@@ -91,3 +110,4 @@ services:
 
 volumes:
   nui-data:
+  postgres-data:
