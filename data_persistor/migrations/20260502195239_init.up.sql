@@ -20,7 +20,8 @@ AS $BODY$
 UPDATE shorts
 SET is_expired = true
 WHERE (created < NOW() - (expiration * INTERVAL '1 second')
-		AND last_used < NOW() - (expiration * INTERVAL '1 second'))
+		AND (last_used IS null 
+			OR last_used < NOW() - (expiration * INTERVAL '1 second')))
 	AND is_expired = false;
 $BODY$;
 
