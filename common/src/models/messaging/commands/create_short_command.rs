@@ -24,7 +24,7 @@ impl CreateShortCommand {
         crate::proto::messaging::v1::commands::CreateShortCommand {
             request_time: self.request_time,
             long_url: self.long_url.clone(),
-            expiration: 456,
+            expiration: self.expiration,
         }
     }
 }
