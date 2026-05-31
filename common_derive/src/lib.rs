@@ -13,6 +13,5 @@ pub fn derive_type_to_string(input: TokenStream) -> TokenStream {
             }
         }
     };
-
     TokenStream::from(expanded)
 }
