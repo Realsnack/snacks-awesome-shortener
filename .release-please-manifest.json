@@ -3,6 +3,7 @@
   "data_persistor": "1.0.0",
   "health_service": "1.0.0",
   "common": "1.0.0",
+  "common_derive": "1.0.0",
   "shorts_service": "1.0.0",
   "test_tool": "1.0.0"
 }
