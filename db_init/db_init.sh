@@ -14,6 +14,7 @@ if [ "$DB_URL_CHECK" -eq 0 ]; then
   exit 2
 fi
 
+sleep 5
 psql "$DATABASE_URL" <<EOF
   SELECT 1;
 EOF

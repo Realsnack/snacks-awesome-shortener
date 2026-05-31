@@ -39,6 +39,7 @@ spec:
         resources:
           requests:
             storage: 32Gi
+
 --- # postgres service
 apiVersion: v1
 kind: Service
@@ -52,6 +53,7 @@ spec:
   ports:
     - port: 5432
       name: client
+
 --- # postgres external service
 apiVersion: v1
 kind: Service
@@ -67,3 +69,20 @@ spec:
       targetPort: 5432
       nodePort: 30432
       name: client
+
+--- # postgres init container
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sas-db-init
+spec:
+  ttlSecondsAfterFinished: 100
+  template:
+    spec:
+      containers:
+        - name: db-init
+          image: registry.msvacina.cz/sas_db_init:latest
+          env:
+            - name: DATABASE_URL
+              value: postgres://postgres:postgrespwd@postgres-0.postgres:5432/postgres
+      restartPolicy: Never
