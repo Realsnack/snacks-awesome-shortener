@@ -1,8 +1,7 @@
 use crate::TypeString;
 use crate::models::short_url::ShortUrl;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Deserialize, Serialize, TypeString)]
+#[derive(Clone, Debug, TypeString)]
 pub struct PersistShortCommand {
     pub short: ShortUrl,
     pub created: i64,

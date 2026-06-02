@@ -1,9 +1,8 @@
 use crate::TypeString;
 use crate::models::rest::CreateShortRequest;
-use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-#[derive(Clone, Debug, Deserialize, Serialize, TypeString)]
+#[derive(Clone, Debug, TypeString)]
 pub struct CreateShortCommand {
     pub request_time: i64,
     pub long_url: String,
@@ -50,13 +49,5 @@ impl From<CreateShortRequest> for CreateShortCommand {
                 .as_secs()
                 .cast_signed(),
         }
-    }
-}
-
-impl TryFrom<&[u8]> for CreateShortCommand {
-    type Error = rmp_serde::decode::Error;
-
-    fn try_from(request_bytes: &[u8]) -> Result<Self, Self::Error> {
-        rmp_serde::from_slice(request_bytes)
     }
 }

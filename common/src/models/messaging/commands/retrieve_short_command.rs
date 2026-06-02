@@ -1,9 +1,8 @@
 use std::time::SystemTime;
 
 use crate::TypeString;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Deserialize, Serialize, TypeString)]
+#[derive(Clone, Debug, TypeString)]
 pub struct RetrieveShortCommand {
     pub request_time: i64,
     pub short_url: String,
