@@ -1,8 +1,10 @@
-use crate::TypeString;
-use crate::models::rest::CreateShortRequest;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-#[derive(Clone, Debug, TypeString)]
+use crate::models::rest::CreateShortRequest;
+use crate::{ProtoMessage, TypeString};
+
+#[derive(Clone, Debug, ProtoMessage, TypeString)]
+#[proto(type = crate::proto::messaging::v1::commands::CreateShortCommand)]
 pub struct CreateShortCommand {
     pub request_time: i64,
     pub long_url: String,
@@ -15,25 +17,6 @@ impl CreateShortCommand {
             request_time,
             long_url,
             expiration,
-        }
-    }
-
-    /// Serializes the rust struct into protobuff message
-    pub fn to_proto(&self) -> crate::proto::messaging::v1::commands::CreateShortCommand {
-        crate::proto::messaging::v1::commands::CreateShortCommand {
-            request_time: self.request_time,
-            long_url: self.long_url.clone(),
-            expiration: self.expiration,
-        }
-    }
-}
-
-impl From<crate::proto::messaging::v1::commands::CreateShortCommand> for CreateShortCommand {
-    fn from(value: crate::proto::messaging::v1::commands::CreateShortCommand) -> Self {
-        Self {
-            request_time: value.request_time,
-            long_url: value.long_url,
-            expiration: value.expiration,
         }
     }
 }

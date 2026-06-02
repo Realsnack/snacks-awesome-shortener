@@ -5,7 +5,7 @@ pub mod pg_utils;
 pub mod proto;
 pub mod traits;
 pub use config::Config;
-pub use traits::TypeString;
+pub use traits::{ProtoMessage, TypeString};
 
 pub fn setup_logging() {
     if cfg!(debug_assertions) {

@@ -1,8 +1,9 @@
 use std::time::SystemTime;
 
-use crate::TypeString;
+use crate::{ProtoMessage, TypeString};
 
-#[derive(Clone, Debug, TypeString)]
+#[derive(Clone, Debug, ProtoMessage, TypeString)]
+#[proto(type = crate::proto::messaging::v1::commands::RetrieveShortCommand)]
 pub struct RetrieveShortCommand {
     pub request_time: i64,
     pub short_url: String,
@@ -17,22 +18,6 @@ impl RetrieveShortCommand {
                 .as_secs()
                 .cast_signed(),
             short_url,
-        }
-    }
-
-    pub fn to_proto(&self) -> crate::proto::messaging::v1::commands::RetrieveShortCommand {
-        crate::proto::messaging::v1::commands::RetrieveShortCommand {
-            request_time: self.request_time,
-            short_url: self.short_url.clone(),
-        }
-    }
-}
-
-impl From<crate::proto::messaging::v1::commands::RetrieveShortCommand> for RetrieveShortCommand {
-    fn from(value: crate::proto::messaging::v1::commands::RetrieveShortCommand) -> Self {
-        Self {
-            request_time: value.request_time,
-            short_url: value.short_url,
         }
     }
 }

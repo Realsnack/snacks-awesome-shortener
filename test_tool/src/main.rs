@@ -1,5 +1,6 @@
 use async_nats::jetstream::Context;
 use clap::{Parser, Subcommand};
+use common::ProtoMessage;
 use common::config::MessagingConfig;
 use common::models::messaging::{
     CreateShortCommand, PersistShortCommand, RetrieveShortCommand, ShortCreatedEvent,

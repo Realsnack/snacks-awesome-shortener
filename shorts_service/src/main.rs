@@ -1,5 +1,6 @@
 use async_nats::HeaderMap;
 use async_nats::jetstream::{Context, Message};
+use common::ProtoMessage;
 use common::config::MessagingConfig;
 use common::models::messaging::{CreateShortCommand, PersistShortCommand, ShortCreatedEvent};
 use common::models::short_url::ShortUrl;

@@ -4,6 +4,7 @@ use axum::body::Body;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Redirect, Response};
+use common::ProtoMessage;
 use common::TypeString;
 use common::models::messaging::{
     CreateShortCommand, RetrieveShortCommand, ShortCreatedEvent, ShortRetrievedEvent,

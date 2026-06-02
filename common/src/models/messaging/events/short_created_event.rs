@@ -1,7 +1,8 @@
-use crate::TypeString;
 use crate::models::short_url::ShortUrl;
+use crate::{ProtoMessage, TypeString};
 
-#[derive(Clone, Debug, TypeString)]
+#[derive(Clone, Debug, ProtoMessage, TypeString)]
+#[proto(type = crate::proto::messaging::v1::events::ShortCreatedEvent)]
 pub struct ShortCreatedEvent {
     pub short: ShortUrl,
     pub instance_id: String,
@@ -10,21 +11,5 @@ pub struct ShortCreatedEvent {
 impl ShortCreatedEvent {
     pub fn new(short: ShortUrl, instance_id: String) -> ShortCreatedEvent {
         ShortCreatedEvent { short, instance_id }
-    }
-
-    pub fn to_proto(&self) -> crate::proto::messaging::v1::events::ShortCreatedEvent {
-        crate::proto::messaging::v1::events::ShortCreatedEvent {
-            short: Some(self.short.to_proto()),
-            instance_id: self.instance_id.clone(),
-        }
-    }
-}
-
-impl From<crate::proto::messaging::v1::events::ShortCreatedEvent> for ShortCreatedEvent {
-    fn from(value: crate::proto::messaging::v1::events::ShortCreatedEvent) -> Self {
-        Self {
-            short: ShortUrl::from(value.short.unwrap()),
-            instance_id: value.instance_id,
-        }
     }
 }
