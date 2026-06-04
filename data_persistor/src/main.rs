@@ -1,8 +1,8 @@
 use async_nats::jetstream::{Context, Message};
-use common::Config;
 use common::models::messaging::{PersistShortCommand, RetrieveShortCommand, ShortRetrievedEvent};
 use common::models::short_url::ShortUrl;
 use common::nats_utils::{create_common_headers, create_consumer, get_header_value};
+use common::{Config, TypeString};
 use common::{pg_utils, setup_logging};
 use futures_util::TryStreamExt;
 use prost::Message as _;
@@ -115,28 +115,29 @@ pub async fn retrieve_short_command(
     info!("Decoded message received: {:?}", converted_payload);
     // TODO: Retrieve short from redis
 
-    let result = sqlx::query!(
+    let retrieved_short = match sqlx::query!(
         r#"SELECT * FROM retrieve_short($1);"#,
         converted_payload.short_url
     )
     .fetch_one(&db_pool)
-    .await?;
-    debug!("Db result: {:?}", result);
-
-    let headers =
-        create_common_headers(String::from("ShortRetrievedEvent"), correlation_id.clone());
-
-    let retrieved_short = ShortUrl::new(
-        result.short_url.unwrap(),
-        result.long_url.unwrap(),
-        result.expiration.unwrap().into(),
-    );
-
-    let instance_id = std::env::var("HOSTNAME").unwrap_or("unknown".into());
+    .await
+    {
+        Ok(result) => ShortUrl::new(
+            result.short_url.unwrap(),
+            result.long_url.unwrap(),
+            result.expiration.unwrap().into(),
+        ),
+        Err(e) => {
+            info!("Cannot retrieve short: {}", e);
+            ShortUrl::new("".into(), "".into(), 0)
+        }
+    };
 
     debug!("Retrieved short: {:?}", retrieved_short);
 
+    let instance_id = std::env::var("HOSTNAME").unwrap_or("unknown".into());
     let response = ShortRetrievedEvent::new(retrieved_short, instance_id);
+    let headers = create_common_headers(response.type_as_string(), correlation_id.clone());
 
     match jetstream
         .publish_with_headers(

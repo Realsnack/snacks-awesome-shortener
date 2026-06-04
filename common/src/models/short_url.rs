@@ -1,6 +1,7 @@
+use crate::TypeString;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TypeString)]
 pub struct ShortUrl {
     pub short_url: String,
     pub long_url: String,
