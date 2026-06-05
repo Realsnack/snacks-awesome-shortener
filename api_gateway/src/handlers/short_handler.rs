@@ -13,7 +13,7 @@ use common::nats_utils::create_common_headers;
 use prost::Message;
 use serde_json::json;
 use tokio::sync::oneshot;
-use tracing::{debug, info, warn};
+use tracing::{debug, error, info, warn};
 use uuid;
 use uuid::Uuid;
 
@@ -48,12 +48,15 @@ pub async fn handle_short_post(
             short_command.type_as_string(),
             correlation_id.clone()
         ),
-        Err(e) => info!(
-            "Failed to send message {} with X-Correlation-Id '{}' due to error: {}",
-            short_command.type_as_string(),
-            correlation_id.clone(),
-            e
-        ),
+        Err(e) => {
+            error!(
+                "Failed to send message {} with X-Correlation-Id '{}' due to error: {}",
+                short_command.type_as_string(),
+                correlation_id.clone(),
+                e
+            );
+            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        }
     }
 
     match tokio::time::timeout(std::time::Duration::from_secs(10), rx).await {
@@ -110,12 +113,15 @@ pub async fn handle_short_get(
             retrieve_short_command.type_as_string(),
             correlation_id.clone()
         ),
-        Err(e) => info!(
-            "Failed to send message {} with X-Correlation-Id '{}' due to error: {}",
-            retrieve_short_command.type_as_string(),
-            correlation_id.clone(),
-            e
-        ),
+        Err(e) => {
+            error!(
+                "Failed to send message {} with X-Correlation-Id '{}' due to error: {}",
+                retrieve_short_command.type_as_string(),
+                correlation_id.clone(),
+                e
+            );
+            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        }
     }
 
     match tokio::time::timeout(std::time::Duration::from_secs(10), rx).await {
@@ -129,6 +135,10 @@ pub async fn handle_short_get(
                 .unwrap();
             let retrieved_short_event = ShortRetrievedEvent::from(decoded_payload);
             debug!("Retrieved short: {:?}", retrieved_short_event);
+            if retrieved_short_event.short.short_url.is_empty() {
+                return StatusCode::NOT_FOUND.into_response();
+            }
+
             Response::builder()
                 .status(StatusCode::OK)
                 .body(Body::from(json!(retrieved_short_event.short).to_string()))
@@ -172,12 +182,15 @@ pub async fn handle_short_redirect(
             retrieve_short_command.type_as_string(),
             correlation_id.clone()
         ),
-        Err(e) => info!(
-            "Failed to send message {} with X-Correlation-Id '{}' due to error: {}",
-            retrieve_short_command.type_as_string(),
-            correlation_id.clone(),
-            e
-        ),
+        Err(e) => {
+            error!(
+                "Failed to send message {} with X-Correlation-Id '{}' due to error: {}",
+                retrieve_short_command.type_as_string(),
+                correlation_id.clone(),
+                e
+            );
+            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        }
     }
 
     match tokio::time::timeout(std::time::Duration::from_secs(10), rx).await {
@@ -191,6 +204,9 @@ pub async fn handle_short_redirect(
                 .unwrap();
             let retrieved_short_event = ShortRetrievedEvent::from(decoded_payload);
             debug!("Retrieved short: {:?}", retrieved_short_event);
+            if retrieved_short_event.short.short_url.is_empty() {
+                return StatusCode::NOT_FOUND.into_response();
+            }
             Redirect::temporary(retrieved_short_event.short.long_url.as_str()).into_response()
         }
         _ => {
