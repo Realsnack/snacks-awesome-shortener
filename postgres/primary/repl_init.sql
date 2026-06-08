@@ -1,0 +1,1 @@
+CREATE ROLE repuser WITH REPLICATION PASSWORD 'secretPassword' LOGIN;
