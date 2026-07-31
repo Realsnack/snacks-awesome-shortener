@@ -1,3 +1,25 @@
 [workspace]
 resolver = "3"
-members = ["api_gateway", "common", "common_derive", "common_derive", "data_persistor", "shorts_service", "test_tool"]
+members = ["api_gateway", "common", "common_derive", "data_persistor", "shorts_service", "test_tool"]
+
+# namtao.com/rust
+[workspace.lints.clippy]
+# UM, ACTUALLY
+pedantic = { level = "deny", priority = -1 }
+# DEVELOPING LINTS
+nursery = { level = "deny", priority = -1 }
+# DENY PANICS
+unwrap_used = "deny"
+expect_used = "deny"
+indexing_slicing = "deny"
+arithmetic_side_effects = "deny"
+unreachable = "deny"
+unimplemented = "deny"
+unchecked_time_subtraction = "deny"
+todo = "deny"
+string_slice = "deny"
+panic_in_result_fn = "deny"
+panic = "deny"
+exit = "deny"
+as_conversions = "deny"
+
