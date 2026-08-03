@@ -10,7 +10,7 @@ pub struct PersistShortCommand {
 
 impl PersistShortCommand {
     pub fn new(short: ShortUrl, created: i64) -> PersistShortCommand {
-        PersistShortCommand { short, created }
+        Self { short, created }
     }
 
     pub fn to_proto(&self) -> crate::proto::messaging::v1::commands::PersistShortCommand {

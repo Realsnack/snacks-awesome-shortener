@@ -10,7 +10,7 @@ pub struct ShortCreatedEvent {
 
 impl ShortCreatedEvent {
     pub fn new(short: ShortUrl, instance_id: String) -> ShortCreatedEvent {
-        ShortCreatedEvent { short, instance_id }
+        Self { short, instance_id }
     }
 
     pub fn to_proto(&self) -> crate::proto::messaging::v1::events::ShortCreatedEvent {

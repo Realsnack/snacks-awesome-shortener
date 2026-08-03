@@ -11,7 +11,7 @@ pub struct RetrieveShortCommand {
 
 impl RetrieveShortCommand {
     pub fn new(short_url: String) -> RetrieveShortCommand {
-        RetrieveShortCommand {
+        Self {
             request_time: SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
                 .unwrap()

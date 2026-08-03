@@ -1,0 +1,39 @@
+services:
+  postgres-primary:
+    image: registry.msvacina.cz/postgresql:latest
+    container_name: postgres-primary
+    ports:
+      - "5435:5432"
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=repuser
+      - POSTGRESQL_REPLICATION_PASSWORD=reppassword
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=postgrespwd
+      - POSTGRESQL_DATABASE=mydb
+    volumes:
+      - primary_data:/bitnami/postgresql
+      - wal_archive:/bitnami/postgresql/wal_archive
+
+  postgres-replica:
+    image: registry.msvacina.cz/postgresql:latest
+    container_name: postgres-replica
+    ports:
+      - "5436:5432"
+    depends_on:
+      - postgres-primary
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=repuser
+      - POSTGRESQL_REPLICATION_PASSWORD=reppassword
+      - POSTGRESQL_MASTER_HOST=postgres-primary
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+      - POSTGRESQL_PASSWORD=postgrespwd
+    volumes:
+      - replica_data:/bitnami/postgresql
+      - wal_archive:/bitnami/postgresql/wal_archive
+
+volumes:
+  primary_data:
+  replica_data:
+  wal_archive:

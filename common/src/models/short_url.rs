@@ -10,13 +10,14 @@ pub struct ShortUrl {
 
 impl ShortUrl {
     pub fn new(short_url: String, long_url: String, expiration: i64) -> ShortUrl {
-        ShortUrl {
+        Self {
             short_url,
             long_url,
             expiration,
         }
     }
 
+    #[must_use]
     pub fn to_proto(&self) -> crate::proto::common::v1::ShortUrl {
         crate::proto::common::v1::ShortUrl {
             short_url: self.short_url.clone(),

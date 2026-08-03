@@ -90,23 +90,18 @@ pub async fn create_pull_consumer(
 }
 
 pub fn get_header_value<'a>(message_headers: &'a Option<HeaderMap>, key: &str) -> Option<&'a str> {
-    let headers = match message_headers {
-        Some(headers) => headers,
-        None => {
-            error!("No headers in message");
-            return None;
-        }
+    let Some(headers) = message_headers else {
+        error!("No headers in message");
+        return None;
     };
 
-    match headers.get(key) {
-        Some(value) => Some(value.as_str()),
-        None => {
-            warn!("Header '{}' not found in headers", key);
-            None
-        }
-    }
+    headers.get(key).map_or_else(|| {
+        warn!("Header '{}' not found in headers", key);
+        None
+    }, |value| Some(value.as_str()))
 }
 
+#[must_use]
 pub fn create_common_headers(message_type: String, correlation_id: String) -> HeaderMap {
     let mut headers = HeaderMap::new();
     headers.insert("message_type", message_type);
@@ -114,3 +109,4 @@ pub fn create_common_headers(message_type: String, correlation_id: String) -> He
 
     headers
 }
+

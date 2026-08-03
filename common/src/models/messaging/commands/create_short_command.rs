@@ -12,7 +12,7 @@ pub struct CreateShortCommand {
 
 impl CreateShortCommand {
     pub fn new(request_time: i64, long_url: String, expiration: i64) -> CreateShortCommand {
-        CreateShortCommand {
+        Self {
             request_time,
             long_url,
             expiration,

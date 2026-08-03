@@ -9,7 +9,7 @@ pub struct ShortRetrievedEvent {
 
 impl ShortRetrievedEvent {
     pub fn new(short: ShortUrl, instance_id: String) -> ShortRetrievedEvent {
-        ShortRetrievedEvent { short, instance_id }
+        Self { short, instance_id }
     }
 
     pub fn to_proto(&self) -> crate::proto::messaging::v1::events::ShortRetrievedEvent {
