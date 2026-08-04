@@ -7,8 +7,9 @@ pub struct CreateShortRequest {
 }
 
 impl CreateShortRequest {
-    pub fn new(long_url: String, expiration: Option<i64>) -> CreateShortRequest {
-        CreateShortRequest {
+    #[must_use]
+    pub const fn new(long_url: String, expiration: Option<i64>) -> Self {
+        Self {
             long_url,
             expiration,
         }

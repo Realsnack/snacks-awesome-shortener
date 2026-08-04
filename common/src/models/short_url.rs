@@ -9,7 +9,8 @@ pub struct ShortUrl {
 }
 
 impl ShortUrl {
-    pub fn new(short_url: String, long_url: String, expiration: i64) -> ShortUrl {
+    #[must_use]
+    pub const fn new(short_url: String, long_url: String, expiration: i64) -> Self {
         Self {
             short_url,
             long_url,

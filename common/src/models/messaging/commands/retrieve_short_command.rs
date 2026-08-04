@@ -10,7 +10,8 @@ pub struct RetrieveShortCommand {
 }
 
 impl RetrieveShortCommand {
-    pub fn new(short_url: String) -> RetrieveShortCommand {
+    #[must_use]
+    pub fn new(short_url: String) -> Self {
         Self {
             request_time: SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
@@ -21,6 +22,7 @@ impl RetrieveShortCommand {
         }
     }
 
+    #[must_use]
     pub fn to_proto(&self) -> crate::proto::messaging::v1::commands::RetrieveShortCommand {
         crate::proto::messaging::v1::commands::RetrieveShortCommand {
             request_time: self.request_time,

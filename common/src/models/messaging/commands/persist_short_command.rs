@@ -9,10 +9,12 @@ pub struct PersistShortCommand {
 }
 
 impl PersistShortCommand {
-    pub fn new(short: ShortUrl, created: i64) -> PersistShortCommand {
+    #[must_use]
+    pub const fn new(short: ShortUrl, created: i64) -> Self {
         Self { short, created }
     }
 
+    #[must_use]
     pub fn to_proto(&self) -> crate::proto::messaging::v1::commands::PersistShortCommand {
         crate::proto::messaging::v1::commands::PersistShortCommand {
             short: Some(self.short.to_proto()),

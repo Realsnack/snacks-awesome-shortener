@@ -11,7 +11,8 @@ pub struct CreateShortCommand {
 }
 
 impl CreateShortCommand {
-    pub fn new(request_time: i64, long_url: String, expiration: i64) -> CreateShortCommand {
+    #[must_use]
+    pub const fn new(request_time: i64, long_url: String, expiration: i64) -> Self {
         Self {
             request_time,
             long_url,
@@ -19,7 +20,7 @@ impl CreateShortCommand {
         }
     }
 
-    /// Serializes the rust struct into protobuff message
+    #[must_use]
     pub fn to_proto(&self) -> crate::proto::messaging::v1::commands::CreateShortCommand {
         crate::proto::messaging::v1::commands::CreateShortCommand {
             request_time: self.request_time,
