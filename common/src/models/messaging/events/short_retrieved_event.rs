@@ -22,11 +22,18 @@ impl ShortRetrievedEvent {
     }
 }
 
-impl From<crate::proto::messaging::v1::events::ShortRetrievedEvent> for ShortRetrievedEvent {
-    fn from(value: crate::proto::messaging::v1::events::ShortRetrievedEvent) -> Self {
-        Self {
-            short: ShortUrl::from(value.short.unwrap()),
+impl TryFrom<crate::proto::messaging::v1::events::ShortRetrievedEvent> for ShortRetrievedEvent {
+    type Error = crate::proto::proto_conversion_error::ConversionFromNone;
+
+    fn try_from(value: crate::proto::messaging::v1::events::ShortRetrievedEvent) -> Result<Self, crate::proto::proto_conversion_error::ConversionFromNone> {
+        let short = value
+            .short
+            .ok_or(crate::proto::proto_conversion_error::ConversionFromNone)?;
+
+        Ok(Self {
+            short: ShortUrl::from(short),
             instance_id: value.instance_id,
-        }
+        })
     }
 }
+

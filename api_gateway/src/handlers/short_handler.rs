@@ -133,11 +133,11 @@ pub async fn handle_short_get(
                     response.message.payload,
                 )
                 .unwrap();
-            let retrieved_short_event = ShortRetrievedEvent::from(decoded_payload);
+            let retrieved_short_event = match ShortRetrievedEvent::try_from(decoded_payload) {
+                Ok(event) => event,
+                _ => return StatusCode::NOT_FOUND.into_response(),
+            };
             debug!("Retrieved short: {:?}", retrieved_short_event);
-            if retrieved_short_event.short.short_url.is_empty() {
-                return StatusCode::NOT_FOUND.into_response();
-            }
 
             Response::builder()
                 .status(StatusCode::OK)
@@ -202,11 +202,11 @@ pub async fn handle_short_redirect(
                     response.message.payload,
                 )
                 .unwrap();
-            let retrieved_short_event = ShortRetrievedEvent::from(decoded_payload);
+            let retrieved_short_event = match ShortRetrievedEvent::try_from(decoded_payload) {
+                Ok(event) => event,
+                _ => return StatusCode::NOT_FOUND.into_response(),
+            };
             debug!("Retrieved short: {:?}", retrieved_short_event);
-            if retrieved_short_event.short.short_url.is_empty() {
-                return StatusCode::NOT_FOUND.into_response();
-            }
             Redirect::temporary(retrieved_short_event.short.long_url.as_str()).into_response()
         }
         _ => {
