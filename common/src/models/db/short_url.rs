@@ -11,7 +11,8 @@ pub struct ShortUrl {
 }
 
 impl ShortUrl {
-    pub fn new(
+    #[must_use]
+    pub const fn new(
         short_url: String,
         long_url: String,
         expiration: usize,
@@ -19,8 +20,8 @@ impl ShortUrl {
         last_used: Option<NaiveDateTime>,
         use_counter: usize,
         is_expired: bool,
-    ) -> ShortUrl {
-        ShortUrl {
+    ) -> Self {
+        Self {
             short_url,
             long_url,
             expiration,

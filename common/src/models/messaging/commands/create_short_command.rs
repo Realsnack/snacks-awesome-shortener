@@ -1,7 +1,8 @@
 use crate::TypeString;
 use crate::models::rest::CreateShortRequest;
 use serde::{Deserialize, Serialize};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::SystemTime;
+use tracing::error;
 
 #[derive(Clone, Debug, Deserialize, Serialize, TypeString)]
 pub struct CreateShortCommand {
@@ -46,10 +47,10 @@ impl From<CreateShortRequest> for CreateShortCommand {
             expiration: create_short_request.expiration.unwrap_or(3600),
             long_url: create_short_request.long_url,
             request_time: SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_secs()
-                .cast_signed(),
+                .duration_since(SystemTime::UNIX_EPOCH).map_or_else(|err| {
+                    error!("System clock is before Unix epoch: {err}");
+                    0
+                }, |duration| duration.as_secs().cast_signed()),
         }
     }
 }

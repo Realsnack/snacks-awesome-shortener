@@ -2,6 +2,7 @@ use std::time::SystemTime;
 
 use crate::TypeString;
 use serde::{Deserialize, Serialize};
+use tracing::error;
 
 #[derive(Clone, Debug, Deserialize, Serialize, TypeString)]
 pub struct RetrieveShortCommand {
@@ -14,11 +15,11 @@ impl RetrieveShortCommand {
     pub fn new(short_url: String) -> Self {
         Self {
             request_time: SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap()
-                .as_secs()
-                .cast_signed(),
-            short_url,
+                .duration_since(SystemTime::UNIX_EPOCH).map_or_else(|err| {
+                    error!("System clock is before Unix epoch: {err}");
+                    0
+                }, |duration| duration.as_secs().cast_signed()),
+                short_url,
         }
     }
 

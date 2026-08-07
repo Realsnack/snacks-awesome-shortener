@@ -6,6 +6,7 @@ pub struct Config {
 }
 
 impl Config {
+    #[must_use]
     pub fn from_env(cargo_pkg_name: String) -> Self {
         let db_config = DbConfig::from_env();
         let messaging_config = MessagingConfig::from_env(cargo_pkg_name);
@@ -16,11 +17,13 @@ impl Config {
         }
     }
 
-    pub fn get_messaging_config(&self) -> &MessagingConfig {
+    #[must_use]
+    pub const fn get_messaging_config(&self) -> &MessagingConfig {
         &self.messaging_config
     }
 
-    pub fn get_database_config(&self) -> &DbConfig {
+    #[must_use]
+    pub const fn get_database_config(&self) -> &DbConfig {
         &self.db_config
     }
 }

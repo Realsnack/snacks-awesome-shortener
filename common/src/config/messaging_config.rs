@@ -10,14 +10,15 @@ pub struct MessagingConfig {
 }
 
 impl MessagingConfig {
-    pub fn new(
+    #[must_use]
+    pub const fn new(
         request_stream: String,
         response_stream: String,
         consumer_name: String,
         nats_url: String,
         request_stream_max_messages: i64,
-    ) -> MessagingConfig {
-        MessagingConfig {
+    ) -> Self {
+        Self {
             request_stream,
             response_stream,
             consumer_name,
@@ -26,16 +27,17 @@ impl MessagingConfig {
         }
     }
 
-    pub fn from_env(cargo_pkg_name: String) -> MessagingConfig {
+    #[must_use]
+    pub fn from_env(cargo_pkg_name: String) -> Self {
         let request_stream = std::env::var("REQUEST_STREAM").unwrap_or_else(|_| {
-            let request_stream = format!("{}::request", cargo_pkg_name);
+            let request_stream = format!("{cargo_pkg_name}::request");
             info!("No REQUEST_STREAM configured, using '{}'", request_stream);
             request_stream
         });
 
         let response_stream = std::env::var("RESPONSE_STREAM").unwrap_or_else(|_| {
-            let response_stream = format!("{}::response", cargo_pkg_name);
-            info!("No RESPONSE_STREAM configured, using '{}'", response_stream);
+            let response_stream = format!("{cargo_pkg_name}::response");
+            info!("No RESPONSE_STREAM configured, using '{response_stream}'");
             response_stream
         });
 
@@ -55,7 +57,7 @@ impl MessagingConfig {
             .parse()
             .expect("Couldn't convert REQUEST_MAX_MESSAGES");
 
-        MessagingConfig {
+        Self {
             request_stream,
             response_stream,
             consumer_name,
