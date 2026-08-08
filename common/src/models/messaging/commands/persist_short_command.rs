@@ -23,11 +23,17 @@ impl PersistShortCommand {
     }
 }
 
-impl From<crate::proto::messaging::v1::commands::PersistShortCommand> for PersistShortCommand {
-    fn from(value: crate::proto::messaging::v1::commands::PersistShortCommand) -> Self {
-        Self {
-            short: ShortUrl::from(value.short.unwrap()),
-            created: value.created,
-        }
+impl TryFrom<crate::proto::messaging::v1::commands::PersistShortCommand> for PersistShortCommand {
+    type Error = crate::proto::proto_conversion_error::ConversionFromNone;
+
+    fn try_from(value: crate::proto::messaging::v1::commands::PersistShortCommand) -> Result<Self, crate::proto::proto_conversion_error::ConversionFromNone> {
+        let short = value
+            .short
+            .ok_or(crate::proto::proto_conversion_error::ConversionFromNone)?;
+
+        Ok(Self {
+            short: ShortUrl::from(short),
+            created: value.created
+        })
     }
 }

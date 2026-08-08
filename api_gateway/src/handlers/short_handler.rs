@@ -67,7 +67,10 @@ pub async fn handle_short_post(
                 response.message.payload,
             )
             .unwrap();
-            let created_short = ShortCreatedEvent::from(decoded_payload);
+            let created_short = match ShortCreatedEvent::try_from(decoded_payload) {
+                Ok(event) => event,
+                _ => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+            };
             debug!("Created short: {:?}", created_short);
             Response::builder()
                 .status(StatusCode::OK)

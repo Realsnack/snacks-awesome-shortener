@@ -59,14 +59,18 @@ pub async fn process_message(
 
 pub async fn persist_short_command(
     message: &[u8],
-    _correlation_id: String,
+    correlation_id: String,
     db_pool: Pool<Postgres>,
     _jetstream: &Context,
 ) -> Result<(), sqlx::Error> {
     let decoded_payload =
         common::proto::messaging::v1::commands::PersistShortCommand::decode(message).unwrap();
     debug!("message received: {:?}", decoded_payload);
-    let converted_payload = PersistShortCommand::from(decoded_payload);
+    let converted_payload = PersistShortCommand::try_from(decoded_payload);
+    if converted_payload.is_err() {
+        error!("Unable to decorde message with id: {correlation_id}");
+    }
+    let converted_payload = converted_payload.unwrap();
     info!("Decoded message received: {:?}", converted_payload);
 
     // TODO: Save to redis

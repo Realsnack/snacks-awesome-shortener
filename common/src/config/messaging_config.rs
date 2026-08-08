@@ -54,8 +54,10 @@ impl MessagingConfig {
         });
 
         let request_stream_max_messages = max_messages
-            .parse()
-            .expect("Couldn't convert REQUEST_MAX_MESSAGES");
+            .parse().unwrap_or_else(|_| {
+                warn!("Couldn't convert REQUEST_MAX_MESSAGES");
+                100
+            });
 
         Self {
             request_stream,
