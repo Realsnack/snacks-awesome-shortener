@@ -12,7 +12,7 @@ use std::sync::Arc;
 use tokio::sync::oneshot;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
 pub mod config;
@@ -21,7 +21,7 @@ pub mod routes;
 pub mod services;
 pub mod state;
 
-pub async fn build_app(config: &Config, state: AppState) -> Router {
+pub fn build_app(config: &Config, state: AppState) -> Router {
     const VERSION: &str = env!("CARGO_PKG_VERSION");
     const NAME: &str = env!("CARGO_PKG_NAME");
 
@@ -52,12 +52,12 @@ pub async fn run(app: Router, config: Config) {
         Ok(listener) => {
             axum::serve(listener, tower::make::Shared::new(app))
                 .await
-                .unwrap();
-        }
+                .unwrap_or_else(|e| {error!("Couldn't start serving due to error: {e}");});
+            }
         Err(e) => {
             error!("Couldn't start app due to error: '{}'", e);
         }
-    };
+    }
 }
 
 pub async fn run_consumer(
@@ -70,7 +70,7 @@ pub async fn run_consumer(
         consumer_config.response_stream.clone(),
         consumer_config.request_stream_max_messages,
     )
-    .await?;
+        .await?;
     let consumer_id = Uuid::new_v4();
     let consumer_name = format!("{}-{}", consumer_config.consumer_name, consumer_id);
     info!("Created NATS consumer with name {}", consumer_name);
@@ -84,11 +84,10 @@ pub async fn run_consumer(
         let correlation_id = message
             .headers
             .as_ref()
-            .unwrap()
-            .get("correlation_id")
-            .unwrap()
-            .as_str()
-            .to_string();
+            .and_then(|headers| headers.get("correlation_id"))
+            .map_or_else(|| {
+                warn!("No correlation_id in header, generating random one");
+                Uuid::new_v4().to_string()}, |value| value.as_str().to_string());
         info!("Received response with id '{}'", correlation_id.clone());
 
         if let Some((_, sender)) = state.pending.remove(&correlation_id) {
