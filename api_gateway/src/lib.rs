@@ -37,13 +37,13 @@ pub fn build_app(config: &Config, state: AppState) -> Router {
         .with_state(state)
 }
 
-pub async fn build_state(config: &MessagingConfig) -> AppState {
-    let client = async_nats::connect(&config.nats_url).await.unwrap();
+pub async fn build_state(config: &MessagingConfig) -> Result<AppState, async_nats::Error> {
+    let client = async_nats::connect(&config.nats_url).await?;
 
     let pending_map: DashMap<String, oneshot::Sender<Message>> = DashMap::new();
     let pending = Arc::new(pending_map);
 
-    AppState { pending, client }
+    Ok(AppState { pending, client })
 }
 
 pub async fn run(app: Router, config: Config) {

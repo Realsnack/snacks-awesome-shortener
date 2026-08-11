@@ -24,7 +24,7 @@ pub async fn handle_short_post(
 ) -> Response {
     debug!("Short request: '{:?}'", short_request);
 
-    let correlation_id = get_correlation_id_or_generate(headers);
+    let correlation_id = get_correlation_id_or_generate(&headers);
 
     let (tx, rx) = oneshot::channel();
     state.pending.insert(correlation_id.clone(), tx);
@@ -89,7 +89,7 @@ pub async fn handle_short_get(
     headers: axum::http::header::HeaderMap,
     Path(short_url): Path<String>,
 ) -> Response {
-    let correlation_id = get_correlation_id_or_generate(headers);
+    let correlation_id = get_correlation_id_or_generate(&headers);
 
     let (tx, rx) = oneshot::channel();
     state.pending.insert(correlation_id.clone(), tx);
@@ -159,7 +159,7 @@ pub async fn handle_short_redirect(
     headers: axum::http::header::HeaderMap,
     Path(short_url): Path<String>,
 ) -> Response {
-    let correlation_id = get_correlation_id_or_generate(headers);
+    let correlation_id = get_correlation_id_or_generate(&headers);
 
     let (tx, rx) = oneshot::channel();
     state.pending.insert(correlation_id.clone(), tx);
@@ -203,8 +203,7 @@ pub async fn handle_short_redirect(
             let decoded_payload =
                 common::proto::messaging::v1::events::ShortRetrievedEvent::decode(
                     response.message.payload,
-                )
-                .unwrap();
+                ).unwrap();
             let retrieved_short_event = match ShortRetrievedEvent::try_from(decoded_payload) {
                 Ok(event) => event,
                 _ => return StatusCode::NOT_FOUND.into_response(),
@@ -219,10 +218,9 @@ pub async fn handle_short_redirect(
     }
 }
 
-fn get_correlation_id_or_generate(headers: axum::http::HeaderMap) -> String {
+fn get_correlation_id_or_generate(headers: &axum::http::HeaderMap) -> String {
     headers
         .get("X-Correlation-Id")
         .and_then(|v| v.to_str().ok())
-        .map(str::to_owned)
-        .unwrap_or_else(|| Uuid::new_v4().to_string())
+        .map_or_else(|| Uuid::new_v4().to_string(), str::to_owned)
 }

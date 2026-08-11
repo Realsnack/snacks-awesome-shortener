@@ -4,16 +4,18 @@ use common::config::MessagingConfig;
 use common::setup_logging;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), async_nats::Error>{
     setup_logging();
     let api_config = Config::from_env();
     let consumer_config = MessagingConfig::from_env(env!("CARGO_PKG_NAME").to_string());
 
-    let state = build_state(&consumer_config).await;
+    let state = build_state(&consumer_config).await?;
     let app = build_app(&api_config, state.clone());
 
     let consumer_task = tokio::spawn(run_consumer(consumer_config, state));
     let api_task = tokio::spawn(run(app, api_config));
 
     let _ = tokio::try_join!(api_task, consumer_task);
+
+    Ok(())
 }
