@@ -7,14 +7,16 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(app_address: String, app_port: String) -> Config {
-        Config {
+    #[must_use]
+    pub const fn new(app_address: String, app_port: String) -> Self {
+        Self {
             app_address,
             app_port,
         }
     }
 
-    pub fn from_env() -> Config {
+    #[must_use]
+    pub fn from_env() -> Self {
         let app_address = std::env::var("SAS_IP").unwrap_or_else(|_| {
             debug!("SAS_IP not specified, using 0.0.0.0");
             String::from("0.0.0.0")
@@ -25,7 +27,7 @@ impl Config {
             String::from("8080")
         });
 
-        Config {
+        Self {
             app_address,
             app_port,
         }
