@@ -1,13 +1,10 @@
-# syntax=docker/dockerfile:1.7
-
 ARG RUST_VERSION=1.94
-
 FROM rust:${RUST_VERSION}-slim-bookworm AS base
 
 WORKDIR /app
 
 RUN apt-get update && \
-    apt-get install -y \
+    apt-get install --no-install-recommends -y \
     pkg-config \
     libssl-dev \
     build-essential \
@@ -67,12 +64,12 @@ RUN cargo build \
 
 RUN cp target/release/${SERVICE_NAME} /app/app
 
-FROM bitnami/minideb:latest AS runtime
+FROM bitnami/minideb@sha256:e5ce04636fdfb0e9a55ab623f3935fd1eb55de122067a615eefcf7dccf482ae3 AS runtime
 
 WORKDIR /app
 
 RUN apt-get update && \
-    apt-get install -y \
+    apt-get install --no-install-recommends -y \
     ca-certificates \
     libssl3 \
     && rm -rf /var/lib/apt/lists/*
@@ -80,5 +77,8 @@ RUN apt-get update && \
 COPY --from=builder /app/app /usr/local/bin/app
 
 ENV RUST_LOG=info
+USER rust_app
+
+EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/app"]
